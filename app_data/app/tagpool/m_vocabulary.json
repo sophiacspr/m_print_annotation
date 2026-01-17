@@ -1,0 +1,32 @@
+{
+  "type": "VOCAB",
+  "id_prefix": "v",
+  "has_database": false,
+  "attributes": {
+    "tid": {
+      "type": "ID"
+    },
+    "lemma": {
+      "type": "CDATA"
+    },
+    "english": {
+      "type": "CDATA"
+    },
+    "french": {
+      "type": "CDATA"
+    },
+    "spanish": {
+      "type": "CDATA"
+    },
+    "root": {
+      "type": "IDREF"
+    },
+    "homonym": {
+      "type": "boolean",
+      "allowedValues": [
+        "true",
+        "false"
+      ]
+    }
+  }
+}

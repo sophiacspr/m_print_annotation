@@ -1,0 +1,25 @@
+{
+  "type": "GRAMMAR",
+  "id_prefix": "g",
+  "has_database": false,
+  "attributes": {
+    "tid": {
+      "type": "ID"
+    },
+    "lemma": {
+      "type": "CDATA"
+    },
+    "english": {
+      "type": "CDATA"
+    },
+    "french": {
+      "type": "CDATA"
+    },
+    "spanish": {
+      "type": "CDATA"
+    },
+    "root": {
+      "type": "IDREF"
+    }
+  }
+}
