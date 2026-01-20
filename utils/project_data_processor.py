@@ -149,8 +149,9 @@ class ProjectDataProcessor:
         """
         tags = self._project_data.get("selected_tags", [])
         tag_groups = self._project_data.get("tag_groups", {})
-        self._project_data["tag_groups"] = {group_name: [tag["name"] for tag in tags if tag["display_name"]
-                                                         in tag_display_names] for group_name, tag_display_names in tag_groups.items()}
+        # Create a lookup dict for efficient access
+        tag_dict = {tag["display_name"]: tag["name"] for tag in tags}
+        self._project_data["tag_groups"] = {group_name: [tag_dict[display_name] for display_name in tag_display_names] for group_name, tag_display_names in tag_groups.items()}
         self._project_data["tag_group_file_name"] = self._derive_file_name(self._project_data.get(
             "tag_group_file_name", "groups01.json"))
 
