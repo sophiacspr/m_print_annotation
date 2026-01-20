@@ -1,0 +1,34 @@
+{
+    "type": "INFO",
+    "has_database": false,
+    "id_prefix": "in",
+    "attributes": {
+        "tid": {
+            "type": "ID"
+        },
+        "english": {
+            "type": "CDATA",
+            "ui": {
+                "display": "flag",
+                "flag": "en"
+            }
+        },
+        "french": {
+            "type": "CDATA",
+            "ui": {
+                "display": "flag",
+                "flag": "en"
+            }
+        },
+        "spanish": {
+            "type": "CDATA",
+            "ui": {
+                "display": "flag",
+                "flag": "en"
+            }
+        },
+        "root_id": {
+            "type": "IDREF"
+        }
+    }
+}

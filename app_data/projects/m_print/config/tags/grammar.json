@@ -1,0 +1,37 @@
+{
+    "type": "GRAMMAR",
+    "has_database": false,
+    "id_prefix": "g",
+    "attributes": {
+        "tid": {
+            "type": "ID"
+        },
+        "lemma": {
+            "type": "CDATA"
+        },
+        "english": {
+            "type": "CDATA",
+            "ui": {
+                "display": "flag",
+                "flag": "en"
+            }
+        },
+        "french": {
+            "type": "CDATA",
+            "ui": {
+                "display": "flag",
+                "flag": "en"
+            }
+        },
+        "spanish": {
+            "type": "CDATA",
+            "ui": {
+                "display": "flag",
+                "flag": "en"
+            }
+        },
+        "root_id": {
+            "type": "IDREF"
+        }
+    }
+}

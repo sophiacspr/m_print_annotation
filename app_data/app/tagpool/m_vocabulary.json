@@ -10,15 +10,27 @@
       "type": "CDATA"
     },
     "english": {
-      "type": "CDATA"
+      "type": "CDATA",
+      "ui": {
+        "display": "flag",
+        "flag": "en"
+      }
     },
     "french": {
-      "type": "CDATA"
+      "type": "CDATA",
+      "ui": {
+        "display": "flag",
+        "flag": "en"
+      }
     },
     "spanish": {
-      "type": "CDATA"
+      "type": "CDATA",
+      "ui": {
+        "display": "flag",
+        "flag": "en"
+      }
     },
-    "root": {
+    "root_id": {
       "type": "IDREF"
     },
     "homonym": {

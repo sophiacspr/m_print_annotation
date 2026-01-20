@@ -1,0 +1,28 @@
+{
+    "tags": {
+        "GRAMMAR": {
+            "background_color": "#000003",
+            "font_color": "#ffffff"
+        },
+        "IDIOM": {
+            "background_color": "#50127b",
+            "font_color": "#ffffff"
+        },
+        "INFO": {
+            "background_color": "#b63679",
+            "font_color": "#ffffff"
+        },
+        "VOCAB": {
+            "background_color": "#fb8861",
+            "font_color": "#000000"
+        }
+    },
+    "search": {
+        "background_color": "#8ee07e",
+        "font_color": "#000000"
+    },
+    "current_search": {
+        "background_color": "#aaff97",
+        "font_color": "#000000"
+    }
+}

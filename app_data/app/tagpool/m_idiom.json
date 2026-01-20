@@ -1,6 +1,6 @@
 {
-  "type": "VOCAB",
-  "id_prefix": "v",
+  "type": "IDIOM",
+  "id_prefix": "id",
   "has_database": false,
   "attributes": {
     "tid": {
@@ -10,15 +10,27 @@
       "type": "CDATA"
     },
     "english": {
-      "type": "CDATA"
+      "type": "CDATA",
+      "ui": {
+        "display": "flag",
+        "flag": "en"
+      }
     },
     "french": {
-      "type": "CDATA"
+      "type": "CDATA",
+      "ui": {
+        "display": "flag",
+        "flag": "en"
+      }
     },
     "spanish": {
-      "type": "CDATA"
+      "type": "CDATA",
+      "ui": {
+        "display": "flag",
+        "flag": "en"
+      }
     },
-    "root": {
+    "root_id": {
       "type": "IDREF"
     },
     "homonym": {
