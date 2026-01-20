@@ -879,7 +879,7 @@ class Controller(IController):
         """
         tags = self._project_configuration_manager.get_available_tags()
         for tag in tags:
-            tag["display_name"] = f"{tag['name'].upper()} ({tag['project']})"
+            tag["display_name"] = f"{tag['file_name'].upper()} ({tag['project']})"
         return tags
 
     @with_highlight_update
