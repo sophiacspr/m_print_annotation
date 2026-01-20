@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import List
 import tkinter as tk
 from tkinter import ttk
@@ -171,8 +170,11 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         # Action buttons
         ttk.Button(self._page_tag_groups, text="Add Tag Group", command=self._on_button_pressed_add_tag_group).grid(
             row=2, column=0, sticky="w", padx=10, pady=5)
-        ttk.Button(self._page_tag_groups, text="Delete Tag Group", command=self._on_button_pressed_delete_tag_group).grid(
-            row=2, column=2, sticky="e", padx=10, pady=5)
+        right_action_frame = ttk.Frame(self._page_tag_groups)
+        right_action_frame.grid(row=2, column=2, sticky="e", padx=10, pady=5)
+        ttk.Button(right_action_frame, text="Tag up", command=self._on_button_pressed_tag_up).pack(side="left")
+        ttk.Button(right_action_frame, text="Tag down", command=self._on_button_pressed_tag_down).pack(side="left")
+        ttk.Button(right_action_frame, text="Delete Tag Group", command=self._on_button_pressed_delete_tag_group).pack(side="left")
 
         # Navigation buttons
         ttk.Button(self._page_tag_groups, text="Back", command=self._on_button_pressed_previous_tab).grid(
@@ -289,17 +291,18 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         """
         Deletes the currently selected tag group from the list.
         """
-        selected_indices = self._tree_created_groups.curselection()
-        if not selected_indices:
+        selected_ids = self._tree_created_groups.selection()
+        if not selected_ids:
             tk.messagebox.showerror(
                 "Error", "No tag group selected for deletion.", parent=self)
             self._notebook.select(-1)
             return
 
-        for index in selected_indices[::-1]:
-            group_name = self._tree_created_groups.get(index)
-            self._controller.perform_project_remove_tag_group(
-                group_name)
+        for item_id in selected_ids:
+            parent_id = self._tree_created_groups.parent(item_id)
+            if parent_id == "":
+                group_name = self._tree_created_groups.item(item_id, "text")
+                self._controller.perform_project_remove_tag_group(group_name)
 
     def _on_button_pressed_add_selected_tags(self) -> None:
         """
@@ -382,6 +385,93 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             self._listbox_available_tags.focus_set()
         elif current_tab == str(self._page_tag_groups):
             self._entry_tag_group_file_name.focus_set()
+
+    def _on_button_pressed_tag_up(self) -> None:
+        """
+        Moves the selected tag up within its group.
+        """
+        selected_ids = self._tree_created_groups.selection()
+        if not selected_ids:
+            return
+        item_id = selected_ids[0]
+        parent_id = self._tree_created_groups.parent(item_id)
+        if parent_id == "":
+            return  # Not a tag
+        siblings = list(self._tree_created_groups.get_children(parent_id))
+        idx = siblings.index(item_id)
+        if idx == 0:
+            return  # Already at top
+        # Capture stable identifiers
+        group_name = self._tree_created_groups.item(parent_id, "text")
+        tag_text = self._tree_created_groups.item(item_id, "text")
+        new_idx = idx - 1
+        self._tree_created_groups.move(item_id, parent_id, new_idx)
+        # Persist
+        tag_groups = self._build_tag_groups_from_tree()
+        self._controller.perform_project_update_project_data({"tag_groups": tag_groups})
+        # Restore selection
+        self._try_restore_tree_selection(group_name, tag_text)
+
+    def _on_button_pressed_tag_down(self) -> None:
+        """
+        Moves the selected tag down within its group.
+        """
+        selected_ids = self._tree_created_groups.selection()
+        if not selected_ids:
+            return
+        item_id = selected_ids[0]
+        parent_id = self._tree_created_groups.parent(item_id)
+        if parent_id == "":
+            return  # Not a tag
+        siblings = list(self._tree_created_groups.get_children(parent_id))
+        idx = siblings.index(item_id)
+        if idx == len(siblings) - 1:
+            return  # Already at bottom
+        # Capture stable identifiers
+        group_name = self._tree_created_groups.item(parent_id, "text")
+        tag_text = self._tree_created_groups.item(item_id, "text")
+        new_idx = idx + 1
+        self._tree_created_groups.move(item_id, parent_id, new_idx)
+        # Persist
+        tag_groups = self._build_tag_groups_from_tree()
+        self._controller.perform_project_update_project_data({"tag_groups": tag_groups})
+        # Restore selection
+        self._try_restore_tree_selection(group_name, tag_text)
+
+    def _build_tag_groups_from_tree(self) -> dict[str, list[str]]:
+        """
+        Builds the tag_groups dict from the current Treeview structure.
+
+        Returns:
+            dict[str, list[str]]: Group names to list of tag texts.
+        """
+        tag_groups = {}
+        for p_id in self._tree_created_groups.get_children():
+            group_name = self._tree_created_groups.item(p_id, "text")
+            tags = [self._tree_created_groups.item(c_id, "text") for c_id in self._tree_created_groups.get_children(p_id)]
+            tag_groups[group_name] = tags
+        return tag_groups
+
+    def _try_restore_tree_selection(self, group_name: str, tag_text: str) -> None:
+        """
+        Attempts to restore selection to the tag with given group_name and tag_text.
+
+        Args:
+            group_name: The name of the group.
+            tag_text: The text of the tag.
+        """
+        try:
+            # Find group
+            for p_id in self._tree_created_groups.get_children():
+                if self._tree_created_groups.item(p_id, "text") == group_name:
+                    # Find tag
+                    for c_id in self._tree_created_groups.get_children(p_id):
+                        if self._tree_created_groups.item(c_id, "text") == tag_text:
+                            self._tree_created_groups.selection_set(c_id)
+                            self._tree_created_groups.see(c_id)
+                            return
+        except tk.TclError:
+            pass  # Silently ignore if item not found or other Tcl error
 
     def destroy(self) -> None:
         """
