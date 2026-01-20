@@ -1,5 +1,6 @@
 {
   "type": "GRAMMAR",
+  "version": "2.0",
   "id_prefix": "g",
   "has_database": false,
   "attributes": {

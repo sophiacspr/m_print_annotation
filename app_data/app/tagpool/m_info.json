@@ -1,5 +1,6 @@
 {
   "type": "INFO",
+  "version": "2.0",
   "id_prefix": "in",
   "has_database": false,
   "attributes": {

@@ -1,5 +1,6 @@
 {
     "type": "IDIOM",
+    "version": "2.0",
     "has_database": false,
     "id_prefix": "id",
     "attributes": {
