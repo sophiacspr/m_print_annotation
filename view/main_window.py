@@ -56,6 +56,8 @@ class MainWindow(tk.Tk, IObserver):
         file_menu.add_command(label="Open File", command=self._on_open)
         file_menu.add_command(label="Save File", command=self._on_save)
         file_menu.add_command(label="Save as...", command=self._on_save_as)
+        file_menu.add_command(label="Import Tags/Text", command=self._on_import_tags_and_text)
+        file_menu.add_command(label="Export Tags/Text", command=self._on_export_tags_and_text)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self._on_closing)
         menu_bar.add_cascade(label="File", menu=file_menu)
@@ -152,6 +154,12 @@ class MainWindow(tk.Tk, IObserver):
 
     def _on_save_as(self) -> None:
         self._controller.perform_save_as()
+
+    def _on_import_tags_and_text(self) -> None:
+        self._controller.perform_import_tags_and_text()
+
+    def _on_export_tags_and_text(self) -> None:
+        self._controller.perform_export_tags_and_text()
 
     # Project actions
     def _on_new_project(self):

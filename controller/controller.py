@@ -1360,6 +1360,19 @@ class Controller(IController):
         if file_path:
             self.perform_save(file_path=file_path)
 
+    def perform_import_tags_and_text(self) -> None:
+        raise NotImplementedError("Importing tags and text is not yet implemented.")
+    
+    def perform_export_tags_and_text(self, view_id: str = None) -> None:
+        view_id = view_id or self._active_view_id
+        source_model = self._document_source_mapping[view_id]
+        document = source_model.get_state()
+        tags=self._tag_manager.get_all_tags_data(target_model=source_model)
+        data=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
+        print(data["plain_text"])
+        from pprint import pprint
+        pprint(data["tags"])
+
     def check_for_saving(self, enforce_check: bool = False) -> None:
         """
         Checks the SaveStateModel for any dirty (unsaved) views and prompts the user
@@ -1568,39 +1581,6 @@ class Controller(IController):
         """
         for document in documents:
             self._tag_manager.extract_tags_from_document(document)
-
-    #! DEPRECATED
-
-    def find_equivalent_tags(self, documents: List[IDocumentModel], merged_document: IDocumentModel) -> None:
-        """
-        Identifies and marks equivalent tags across multiple document versions.
-
-        This method analyzes tags across all annotator documents and the merged document
-        to determine equivalence based on structure and content. It updates each tag
-        with a list of UUIDs representing all of its equivalent counterparts.
-
-        Args:
-            documents (List[IDocumentModel]): The annotator-specific document models.
-            merged_document (IDocumentModel): The merged reference document.
-
-        Side Effects:
-            Each tag in the documents and the merged document will be updated via
-            `set_equivalent_uuids()` to include the UUIDs of all semantically
-            equivalent tags across versions.
-        """
-        documents_tags = [document.get_tags() for document in documents]
-        merged_document_tags = merged_document.get_tags()
-        separator = '\n\n'
-        documents_sentences = [document.get_text().split(separator)
-                               for document in documents]
-        merged_sentences = merged_document.get_text().split(separator)
-
-        for index, merged_sentence in enumerate(merged_sentences):
-            sentences = [document_sentences[index]
-                         for document_sentences in documents_sentences]
-            self._tag_manager.find_equivalent_tags(
-                sentences=sentences, common_sentence=merged_sentence, documents_tags=documents_tags, merged_tags=merged_document_tags)
-    #! END DEPRECATED
 
     @with_highlight_update
     def perform_prev_sentence(self) -> None:

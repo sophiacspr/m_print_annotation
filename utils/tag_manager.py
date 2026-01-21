@@ -366,6 +366,20 @@ class TagManager:
                 return tag.get_tag_data()
 
         raise ValueError(f"Tag with UUID {tag_uuid} does not exist.")
+    
+    def get_all_tags_data(self, target_model: IDocumentModel) -> List[Dict]:
+        """
+        Retrieves the details of all tags in the document.
+
+        Args:
+            target_model (IDocumentModel): The document model containing the tags.
+
+        Returns:
+            List[Dict]: A list of dictionaries, each representing the attributes and metadata of a tag.
+        """
+        # Get tags from current model
+        tags = target_model.get_tags()
+        return [tag.get_tag_data() for tag in tags]
 
     def get_highlight_data(self, target_model: IDocumentModel) -> List[Tuple[str, int, int]]:
         """
@@ -459,96 +473,4 @@ class TagManager:
                 tag_data.get("references", {}), target_model)
             self.add_tag(tag_data=tag_data, target_model=target_model)
 
-    def find_equivalent_tags(
-        self,
-        sentences: List[str],
-        common_sentence: str,
-        documents_tags: List[List[ITagModel]],
-        merged_tags: List[ITagModel]
-    ) -> None:
-        """
-        Identifies and marks equivalent tags across different annotator sentence versions.
-
-        This version supports tag dictionaries extracted from raw sentences via extract_tags_from_text,
-        and matches them to TagModel instances from document-level tag structures.
-
-        Args:
-            sentences (List[str]): Annotated sentence versions from each annotator.
-            common_sentence (str): The sentence from the merged document.
-            documents_tags (List[List[ITagModel]]): Per-document tag structures (with UUIDs).
-            merged_tags (List[ITagModel]): Tag list from the merged document.
-        """
-        tags_common_sentence = self._tag_processor.extract_tags_from_text(
-            common_sentence)
-        tags_sentences = [self._tag_processor.extract_tags_from_text(
-            sentence) for sentence in sentences]
-
-        if tags_common_sentence:
-            for index in range(len(tags_common_sentence)):
-                equivalent_uuids = []
-
-                # Collect UUIDs from document tag structures
-                all_tags = tags_sentences + [tags_common_sentence]
-                all_documents = documents_tags + [merged_tags]
-
-                for version_index, tags in enumerate(all_tags):
-                    tag_id = tags[index]["attributes"]["id"]
-                    for tag in all_documents[version_index]:
-                        if tag.get_id() == tag_id:
-                            equivalent_uuids.append(tag.get_uuid())
-                            break
-
-                # Assign equivalent UUIDs to each TagModel
-                for version_index, tags in enumerate(all_tags):
-                    tag_id = tags[index]["attributes"]["id"]
-                    for tag in all_documents[version_index]:
-                        if tag.get_id() == tag_id:
-                            tag.set_equivalent_uuids(equivalent_uuids)
-                            break
-            return
-
-        # Hash signature → list of UUIDs
-        equivalence_map = {}
-
-        for annotator_index, tags in enumerate(tags_sentences):
-            sentence = sentences[annotator_index]
-            for tag in tags:
-                tag_type = tag["tag_type"]
-                tag_text = tag["text"]
-                attributes = {k: v for k,
-                              v in tag["attributes"].items() if k != "id"}
-                reference_keys = sorted(tag["attributes"].keys() - {"id"})
-
-                # Position relativ zum getaggten Satz
-                local_pos = tag["position"]
-                sentence_prefix = sentence[:local_pos]
-                relative_position = len(
-                    self._tag_processor.delete_all_tags_from_text(sentence_prefix))
-
-                signature_components = [
-                    tag_type,
-                    tag_text,
-                    str(sorted(attributes.items())),
-                    str(reference_keys),
-                    str(relative_position)
-                ]
-                signature_string = "|".join(signature_components)
-                positional_tag_hash = md5(
-                    signature_string.encode("utf-8")).hexdigest()
-
-                # Find UUID from TagModel with same ID
-                tag_id = tag["attributes"]["id"]
-                for global_tag in documents_tags[annotator_index]:
-                    if global_tag.get_id() == tag_id:
-                        global_tag.set_positional_tag_hash(positional_tag_hash)
-                        equivalence_map.setdefault(
-                            positional_tag_hash, []).append(global_tag.get_uuid())
-                        break
-
-        # Map back equivalent UUIDs to all TagModel objects
-        for document_index, document in enumerate(documents_tags):
-            for tag in document:
-                positional_tag_hash = tag.get_positional_tag_hash()
-                if positional_tag_hash in equivalence_map:
-                    tag.set_equivalent_uuids(
-                        equivalence_map[positional_tag_hash])
+  
