@@ -57,11 +57,6 @@ class ComparisonManager:
 
         merged_document = self._create_merge_document()
 
-        #! remove
-        self._controller.find_equivalent_tags(
-            documents, merged_document)
-        #! end remove
-
         return {
             "comparison_sentences": self._comparison_sentences,
             "differing_to_global": self._differing_to_global,

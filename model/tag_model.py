@@ -30,7 +30,6 @@ class TagModel(ITagModel):
         """
         super().__init__()
         self._tag_data = tag_data
-        self._tag_data["tag_hash"] = self._compute_hash()
         self._incoming_references_count = 0
 
     def _compute_hash(self) -> str:
@@ -253,7 +252,6 @@ class TagModel(ITagModel):
                 - "id_name" (str): The name of the ID attribute.
                 - "references" (Dict[str, ITagModel]): Attribute-to-tag reference mapping.
                 - "equivalent_uuids" (List[str]): List of UUIDs this tag is equivalent to.
-                - "tag_hash" (str): a hash to identify the tag
         """
         return self._tag_data
 
@@ -278,42 +276,6 @@ class TagModel(ITagModel):
         unique_uuids = [uuid for uuid in uuids if not (
             uuid in seen or seen.add(uuid))]
         self._tag_data["equivalent_uuids"] = unique_uuids
-
-    def get_tag_hash(self) -> str:
-        """
-        Returns the computed hash representing this tag's equivalence signature.
-
-        Returns:
-            str: The tag's equivalence hash.
-        """
-        return self._tag_data["tag_hash"]
-
-    def set_tag_hash(self, tag_hash: str) -> None:
-        """
-        Sets the hash value used to identify equivalent tags.
-
-        Args:
-            tag_hash (str): The hash value to associate with this tag.
-        """
-        self._tag_data["tag_hash"] = tag_hash
-
-    def get_positional_tag_hash(self) -> str:
-        """
-        Returns the computed hash representing this tag's equivalence signature (considering the position).
-
-        Returns:
-            str: The tag's equivalence hash.
-        """
-        return self._tag_data.get("positional_tag_hash", None)
-
-    def set_positional_tag_hash(self, positional_tag_hash: str) -> None:
-        """
-        Sets the hash value (considering the position) used to identify equivalent tags.
-
-        Args:
-            tag_hash (str): The hash value to associate with this tag.
-        """
-        self._tag_data["positional_tag_hash"] = positional_tag_hash
 
     def __str__(self) -> str:
         """
