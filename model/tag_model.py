@@ -32,25 +32,6 @@ class TagModel(ITagModel):
         self._tag_data = tag_data
         self._incoming_references_count = 0
 
-    def _compute_hash(self) -> str:
-        """
-        Computes a content-based hash excluding positional data.
-        """
-        tag_type = self._tag_data.get("tag_type", "")
-        text = self._tag_data.get("text", "")
-        attributes = {k: v for k, v in self._tag_data.get(
-            "attributes", {}).items() if k != "id"}
-        references = sorted(self._tag_data.get("references", {}).keys())
-
-        signature = "|".join([
-            tag_type,
-            text,
-            str(sorted(attributes.items())),
-            str(references)
-        ])
-
-        return md5(signature.encode("utf-8")).hexdigest()
-
     def increment_reference_count(self) -> None:
         """
         Increments the count of incoming references to this tag.
