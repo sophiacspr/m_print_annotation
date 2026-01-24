@@ -24,6 +24,7 @@ from observer.interfaces import IPublisher, IObserver, IPublisher, IObserver
 from typing import Any, Callable, Dict, List,  Tuple
 from utils.color_manager import ColorManager
 from utils.comparison_manager import ComparisonManager
+from utils.document_manager import DocumentManager
 from utils.project_configuration_manager import ProjectConfigurationManager
 from utils.path_manager import PathManager
 from utils.pdf_extraction_manager import PDFExtractionManager
@@ -81,6 +82,10 @@ class Controller(IController):
         self._tag_manager = TagManager(self, self._tag_processor)
         self._comparison_manager = ComparisonManager(self, self._tag_processor)
         self._pdf_extraction_manager = PDFExtractionManager(controller=self)
+        self._document_manager = DocumentManager(
+            file_handler=self._file_handler,
+            tag_processor=self._tag_processor
+        )
 
         self._search_manager = SearchManager(file_handler=self._file_handler)
         self._search_model_manager = SearchModelManager(self._search_manager)
@@ -1269,6 +1274,7 @@ class Controller(IController):
                 raise ValueError(
                     "Too many files selected: Only one file path is allowed when loading a predefined annotation model.")
             self._annotation_document_model.set_document(documents[0])
+            #todo move this extraction for all versions to document manager load
             self._tag_manager.extract_tags_from_document(
                 self._annotation_document_model)
 

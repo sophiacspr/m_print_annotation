@@ -186,6 +186,7 @@ class DocumentManager():
                 document.get("tags", [])
             )
             transformed_document = {
+                "document_type": "annotation",
                 "file_path": document.get("file_path", ""),
                 "file_name": document.get("file_name", ""),
                 "meta_tags": {

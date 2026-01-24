@@ -125,6 +125,24 @@ class TagModel(ITagModel):
         """
         self._tag_data["tag_type"] = tag_type
 
+    def get_plain_position(self) -> int:
+        """
+        Retrieves the plain text position of the tag.
+
+        Returns:
+            int: The position of the tag in the plain text.
+        """
+        return self._tag_data.get("plain_position", 0)
+    
+    def set_plain_position(self, position: int) -> None:
+        """
+        Sets the plain text position of the tag.
+
+        Args:
+            position (int): The new plain text position of the tag.
+        """
+        self._tag_data["plain_position"] = position
+
     def get_position(self) -> int:
         """
         Retrieves the position of the tag.

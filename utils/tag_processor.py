@@ -78,9 +78,10 @@ class TagProcessor(ITagProcessor):
 
         # Convert the tag to a string representation
         full_tag = str(tag)
+        offset = len(tag.get_text())
 
         # Insert the tag into the plain text
-        updated_text = plain_text[:plain_position] + full_tag + plain_text[plain_position:]
+        updated_text = plain_text[:plain_position] + full_tag + plain_text[plain_position+offset:]
 
         return updated_text
 

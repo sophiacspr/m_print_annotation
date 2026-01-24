@@ -1,3 +1,4 @@
+tags einheitlich im documentmanager ertellen und dann an controller geben, der sie an die models verteilt. 
 in:
 Zwei versionen.
 Version 1 (alt) inline tags. Werden beim lesen auch version 2 geliftet. 
@@ -5,10 +6,10 @@ Version 2 Tags Liste + plain text
 
 out:
 Speichern nur noch in Version 2
+
+
 Export beide Versionen. 
 
-
-speichern in v2 beim laden wieder text herstellen
 
 
 transform raw text to json file
