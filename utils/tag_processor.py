@@ -210,7 +210,7 @@ class TagProcessor(ITagProcessor):
         """
         return self.delete_all_tags_from_text(text)
 
-    def get_plain_text_and_tags(self, text: str, tags:list[dict]) -> Dict[str, any]:
+    def get_plain_text_and_tags(self, text: str, tags:list[dict]=None) -> Dict[str, any]:
         """
         Extracts both the plain text and the list of tags from the given text.
 
@@ -224,8 +224,14 @@ class TagProcessor(ITagProcessor):
         Returns:
             Dict[str, any]: A dictionary with "plain_text" (str) and "tags" (List[Dict]).
         """
+        #todo get tag data if not provided
         plain_text = self.extract_plain_text(text)
-        tags=self.add_plain_positions_to_tags(tags, text, plain_text)
+        if tags:
+            tags=self.add_plain_positions_to_tags(tags, text, plain_text)
+        else:
+            #todo check if this works correctly
+            tags = self.extract_tags_from_text(text)
+            tags = self.add_plain_positions_to_tags(tags, text, plain_text)
         return {"plain_text": plain_text, "tags": tags}
     
     def add_plain_positions_to_tags(self, tags: List[Dict], original_text: str, plain_text: str) -> List[Dict]:

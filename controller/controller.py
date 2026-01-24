@@ -1261,21 +1261,24 @@ class Controller(IController):
             self._extraction_document_model.set_file_path(file_path=file_path)
             return
 
+        #! load with documentmanager
         documents = [self._file_handler.read_file(
             file_path=file_path) for file_path in file_paths]
-        for document, path in zip(documents, file_paths):
-            document["file_path"] = path
+        #!
 
         if self._active_view_id == "annotation":
             if len(documents) != 1:
                 raise ValueError(
                     "Too many files selected: Only one file path is allowed when loading a predefined annotation model.")
+            #! change logic to version 2
             self._annotation_document_model.set_document(documents[0])
             self._tag_manager.extract_tags_from_document(
                 self._annotation_document_model)
+            #!
 
         # Load stored comparison_model or set up a new one from multiple documents
         if self._active_view_id == "comparison":
+            #! change to version 2 logic
             if documents[0]["document_type"] == "comparison":
                 if len(documents) > 1:
                     raise ValueError(
@@ -1283,6 +1286,7 @@ class Controller(IController):
                 self._load_comparison_model(documents[0])
             else:
                 self._setup_comparison_model(documents)
+            #!
         self._save_state_model.reset_key(self._active_view_id)
 
     def perform_save(self, file_path: str = None, view_id: str = None) -> None:
