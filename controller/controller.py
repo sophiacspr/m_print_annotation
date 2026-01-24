@@ -1360,10 +1360,10 @@ class Controller(IController):
         if file_path:
             self.perform_save(file_path=file_path)
 
-    def perform_import_tags_and_text(self) -> None:
-        raise NotImplementedError("Importing tags and text is not yet implemented.")
+    def _on_export_inline_tags(self) -> None:
+        raise NotImplementedError(f"Exporting inline tags is not yet implemented.")
     
-    def perform_export_tags_and_text(self, view_id: str = None) -> None:
+    def perform_export_tag_list_plain_text(self, view_id: str = None) -> None:
         view_id = view_id or self._active_view_id
         source_model = self._document_source_mapping[view_id]
         document = source_model.get_state()
@@ -1452,7 +1452,7 @@ class Controller(IController):
         file_path = merged_document.get_file_path()
         if not file_path:
             initial_dir = self._file_handler.resolve_path(
-                f"default_merged_save_directory")
+                f"default_comparison_export_v2_directory")
             file_path = self._main_window.ask_user_for_save_path(
                 initial_dir=initial_dir)
             file_name = self._file_handler.derive_file_name(
