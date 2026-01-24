@@ -3,6 +3,7 @@ from typing import List, Dict
 
 from controller.interfaces import IController
 from model.interfaces import ITagModel
+from model.tag_model import TagModel
 from utils.interfaces import ITagProcessor
 
 
@@ -48,6 +49,38 @@ class TagProcessor(ITagProcessor):
         # Replace the original text with the tag at the specified position
         updated_text = text[:position] + full_tag + \
             text[position + len(tag_text):]
+
+        return updated_text
+    
+    def _insert_tag_into_plain_text(self, plain_text: str, tag: ITagModel) -> str:
+        """
+        Inserts a tag into the plain text at the specified plain position.
+
+        Args:
+            plain_text (str): The plain text without tags.
+            tag (ITagModel): An instance of ITagModel containing the tag data to insert.
+                Required properties:
+                    - plain_position (int): The index in the plain text where the tag should be inserted.
+                    - text (str): The text content of the tag.
+                    - tag_type (str): The type of the tag.
+                    - attributes (Dict[str, str]): A dictionary of attribute name-value pairs for the tag.
+
+        Returns:
+            str: The updated text with the tag inserted at the specified plain position.
+
+        Raises:
+            ValueError: If the plain position is invalid.
+        """
+        plain_position = tag.get_plain_position()
+        if plain_position is None or plain_position > len(plain_text):
+            raise ValueError(
+                f"Invalid plain_position for tag: {tag}")
+
+        # Convert the tag to a string representation
+        full_tag = str(tag)
+
+        # Insert the tag into the plain text
+        updated_text = plain_text[:plain_position] + full_tag + plain_text[plain_position:]
 
         return updated_text
 
@@ -115,7 +148,7 @@ class TagProcessor(ITagProcessor):
 
         return updated_text
 
-    def extract_tags_from_text(self, text: str) -> List[Dict]:
+    def _extract_tags_from_text(self, text: str) -> List[Dict]:
         """
         Extracts all tags from the given text and returns them as a list of dictionaries.
 
@@ -219,22 +252,43 @@ class TagProcessor(ITagProcessor):
 
         Args:
             text (str): The input text containing tags.
-            tags (list[dict]): List of tag dictionaries extracted from the text.
-
+            tags (list[dict], optional): Pre-extracted list of tag dictionaries. If provided,
+                                        this list will be used instead of extracting tags from the text.
         Returns:
             Dict[str, any]: A dictionary with "plain_text" (str) and "tags" (List[Dict]).
         """
-        #todo get tag data if not provided
         plain_text = self.extract_plain_text(text)
         if tags:
-            tags=self.add_plain_positions_to_tags(tags, text, plain_text)
+            tags=self._add_plain_positions_to_tags(tags, text, plain_text)
         else:
             #todo check if this works correctly
-            tags = self.extract_tags_from_text(text)
-            tags = self.add_plain_positions_to_tags(tags, text, plain_text)
+            tags = self._extract_tags_from_text(text)
+            tags = self._add_plain_positions_to_tags(tags, text, plain_text)
         return {"plain_text": plain_text, "tags": tags}
     
-    def add_plain_positions_to_tags(self, tags: List[Dict], original_text: str, plain_text: str) -> List[Dict]:
+    def merge_plain_text_and_tags(self, plain_text: str, tags: List[Dict]) -> str:
+        """
+        Merges plain text and a list of tags back into a single text with tags.
+
+        This method reinserts tags into the plain text at their specified positions.
+
+        Args:
+            plain_text (str): The plain text without tags.
+            tags (List[Dict]): A list of tag dictionaries to insert into the text.
+        Returns:
+            str: The merged text with tags inserted.
+        """
+        # Sort tags by their plain_position in descending order
+        sorted_tags = sorted(
+            tags, key=lambda tag: tag.get("plain_position", 0), reverse=True)
+
+        merged_text = plain_text
+        for tag in sorted_tags:
+            tag_model=TagModel(tag)
+            merged_text = self._insert_tag_into_plain_text(merged_text, tag_model)
+        return merged_text
+    
+    def _add_plain_positions_to_tags(self, tags: List[Dict], original_text: str, plain_text: str) -> List[Dict]:
         """
         Adds plain_position to each tag dict, indicating the start index of the tag's inner text in plain_text.
 
@@ -355,7 +409,7 @@ class TagProcessor(ITagProcessor):
             bool: True if the sentence contains referencing tags; False otherwise.
         """
         # Extract all tags from the sentence
-        tags = self.extract_tags_from_text(sentence)
+        tags = self._extract_tags_from_text(sentence)
 
         # Check if any tag contains references
         for tag_data in tags:

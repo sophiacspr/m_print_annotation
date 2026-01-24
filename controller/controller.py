@@ -1261,24 +1261,19 @@ class Controller(IController):
             self._extraction_document_model.set_file_path(file_path=file_path)
             return
 
-        #! load with documentmanager
-        documents = [self._file_handler.read_file(
+        documents = [self._document_manager.load_document(
             file_path=file_path) for file_path in file_paths]
-        #!
 
         if self._active_view_id == "annotation":
             if len(documents) != 1:
                 raise ValueError(
                     "Too many files selected: Only one file path is allowed when loading a predefined annotation model.")
-            #! change logic to version 2
             self._annotation_document_model.set_document(documents[0])
             self._tag_manager.extract_tags_from_document(
                 self._annotation_document_model)
-            #!
 
         # Load stored comparison_model or set up a new one from multiple documents
         if self._active_view_id == "comparison":
-            #! change to version 2 logic
             if documents[0]["document_type"] == "comparison":
                 if len(documents) > 1:
                     raise ValueError(
@@ -1286,7 +1281,6 @@ class Controller(IController):
                 self._load_comparison_model(documents[0])
             else:
                 self._setup_comparison_model(documents)
-            #!
         self._save_state_model.reset_key(self._active_view_id)
 
     def perform_save(self, file_path: str = None, view_id: str = None) -> None:
@@ -1301,52 +1295,11 @@ class Controller(IController):
             self.perform_save_as()
             return
 
-        # prepare data for saving
-        if not view_id == "comparison":
-            document_data = {"document_type": view_id,
-                             "file_path": file_path,
-                             "file_name": self._file_handler.derive_file_name(file_path),
-                             "meta_tags": {
-                                 tag_type: [
-                                     ", ".join(str(tag) for tag in tags)]
-                                 for tag_type, tags in document.get("meta_tags", {}).items()
-                             },
-                             "text": document["text"]}
-        else:
-            merged_document = document.get("merged_document", {})
-            # prepare data for comparison view
-            document_data = {
-                "document_type": "comparison",
-                "source_paths": document["source_file_paths"],
-                "source_file_names": document.get("file_names", []),
-                "file_path": file_path,
-                "num_sentences": document.get("num_sentences", 0),
-                "current_sentence_index": document.get("current_sentence_index", 0),
-                "comparison_sentences": document.get("comparison_sentences", []),
-                "adopted_flags": document.get("adopted_flags", []),
-                "differing_to_global": document.get("differing_to_global", []),
-                "document_data": {
-                    "document_type": "annotation",
-                    "file_name": merged_document.get_file_name(),
-                    "file_path": merged_document.get_file_path(),
-                    "meta_tags": {
-                        tag_type: [", ".join(str(tag) for tag in tags)]
-                        for tag_type, tags in merged_document.get_meta_tags().items()
-                    },
-                    "text": merged_document.get_text(),
-                }
-            }
-
-        if document_data:
-            success = self._file_handler.write_file(file_path, document_data)
-            if not success:
-                raise IOError(
-                    f"Failed to save document to {file_path}. Please check the file path and permissions.")
-            self._save_state_model.reset_key(self._active_view_id)
-
-        else:
-            raise ValueError(
-                "No valid document data found for saving. Ensure the active view is set correctly.")
+        success = self._document_manager.save_document(file_path, document, view_id)
+        if not success:
+            raise IOError(
+                f"Failed to save document to {file_path}. Please check the file path and permissions.")
+        self._save_state_model.reset_key(self._active_view_id)
 
     def perform_save_as(self) -> None:
         """
@@ -1608,7 +1561,7 @@ class Controller(IController):
             sentence_func (Callable[[], List[str]]): Function to retrieve the target sentence(s).
         """
         sentences = sentence_func()
-        tags = [[TagModel(tag_data) for tag_data in self._tag_processor.extract_tags_from_text(
+        tags = [[TagModel(tag_data) for tag_data in self._tag_processor._extract_tags_from_text(
             sentence)] for sentence in sentences]
         self._comparison_model.update_documents(sentences, tags)
 

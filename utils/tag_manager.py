@@ -47,7 +47,7 @@ class TagManager:
         document_text = target_model.get_text()
 
         # Use the TagProcessor to extract tag data
-        extracted_tag_data = self._tag_processor.extract_tags_from_text(
+        extracted_tag_data = self._tag_processor._extract_tags_from_text(
             document_text)
 
         tags = []
@@ -431,7 +431,7 @@ class TagManager:
         """
         meta_tags = {}
         for tag_type, meta_tag_strings in tag_strings.items():
-            tag_data = self._tag_processor.extract_tags_from_text(
+            tag_data = self._tag_processor._extract_tags_from_text(
                 meta_tag_strings)
             tags = []
             for tag in tag_data:
@@ -463,7 +463,7 @@ class TagManager:
                      for sentence in sentences[:global_index])
 
         # Extract tag data from sentence
-        extracted_tag_data = self._tag_processor.extract_tags_from_text(
+        extracted_tag_data = self._tag_processor._extract_tags_from_text(
             sentence)
 
         for tag_data in extracted_tag_data:
