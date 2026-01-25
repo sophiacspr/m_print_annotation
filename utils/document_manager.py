@@ -1,4 +1,5 @@
 from input_output.interfaces import IFileHandler
+from model.tag_model import TagModel
 from utils.interfaces import ITagProcessor
 
 
@@ -108,9 +109,12 @@ class DocumentManager():
             file_path=file_path)
         document["file_path"] = file_path
 
-        if document.get("schema_version", 1) == 2:
-            document = self._transform_document_to_internal_schema(document)
-        return document
+        transformed_document_data = self._transform_document_to_internal_schema(document)
+        if document.get("schema_version", 1) >= 2:
+            document_data = self._add_tags_to_loaded_document(transformed_document_data,document)
+        else:
+            document_data = self._add_tags_to_loaded_document(transformed_document_data)
+        return document_data
     
     def import_plain_text_document(self, file_path)->dict:
         """
@@ -139,68 +143,113 @@ class DocumentManager():
         Returns:
             dict: The transformed document.
         """
-        if document.get("document_type") == "comparison":
-            # Transform comparison document structure
-            transformed_document = {
-                "document_type": "comparison",
-                "source_paths": document.get("source_file_paths", []),
-                "source_file_names": document.get("file_names", []),
-                "file_path": document.get("file_path", ""),
-                "num_sentences": document.get("num_sentences", 0),
-                "current_sentence_index": document.get("current_sentence_index", 0),
-                "comparison_sentences": [],
-                "adopted_flags": document.get("adopted_flags", []),
-                "differing_to_global": document.get("differing_to_global", []),
-                "document_data": {}
-            }
+        schema_version = document.get("schema_version", 1)
+        if schema_version >= 2:
+            if document.get("document_type") == "comparison":
+                # Transform comparison document structure
+                transformed_document = {
+                    "document_type": "comparison",
+                    "source_paths": document.get("source_file_paths", []),
+                    "source_file_names": document.get("file_names", []),
+                    "file_path": document.get("file_path", ""),
+                    "num_sentences": document.get("num_sentences", 0),
+                    "current_sentence_index": document.get("current_sentence_index", 0),
+                    "comparison_sentences": [],
+                    "adopted_flags": document.get("adopted_flags", []),
+                    "differing_to_global": document.get("differing_to_global", []),
+                    "document_data": {}
+                }
+                for sentence_group in document.get("comparison_sentences", []):
+                    transformed_group = []
+                    for sentence in sentence_group:
+                        inline_text = self._tag_processor.merge_plain_text_and_tags(
+                            sentence.get("plain_text", ""),
+                            sentence.get("tags",[])
+                        )
+                        transformed_group.append(inline_text)
+                    transformed_document["comparison_sentences"].append(transformed_group)
 
-            for sentence_group in document.get("comparison_sentences", []):
-                transformed_group = []
-                for sentence in sentence_group:
-                    inline_text = self._tag_processor.merge_plain_text_and_tags(
-                        sentence.get("plain_text", ""),
-                        sentence.get("tags", [])
-                    )
-                    transformed_group.append(inline_text)
-                transformed_document["comparison_sentences"].append(transformed_group)
+                old_merged_document_data = document.get("document_data", {})
+                merged_inline_text = self._tag_processor.merge_plain_text_and_tags(
+                    old_merged_document_data.get("plain_text", ""),
+                    old_merged_document_data.get("tags", [])
+                )
+                new_merged_document_data = {
+                    "document":{
+                        "file_name": old_merged_document_data.get("file_name", ""),
+                        "file_path": old_merged_document_data.get("file_path", ""),
+                        "meta_tags": {
+                            tag_type: [tag.strip() for tag in tags_str.split(",")]
+                            for tag_type, tags_str in old_merged_document_data.get("meta_tags", {}).items()
+                        },
+                        "text": merged_inline_text
+                    }
+                }
+                transformed_document["document_data"] = new_merged_document_data
+                data={
+                    "document": transformed_document,
+                }
 
-            old_document_data = document.get("document_data", {})
-            merged_inline_text = self._tag_processor.merge_plain_text_and_tags(
-                old_document_data.get("plain_text", ""),
-                old_document_data.get("tags", [])
-            )
-            new_document_data = {
-                "file_name": old_document_data.get("file_name", ""),
-                "file_path": old_document_data.get("file_path", ""),
-                "meta_tags": {
-                    tag_type: [tag.strip() for tag in tags_str.split(",")]
-                    for tag_type, tags_str in old_document_data.get("meta_tags", {}).items()
-                },
-                "text": merged_inline_text
-            }
-            transformed_document["document_data"] = new_document_data
+            elif document.get("document_type") == "annotation":
+                inline_text = self._tag_processor.merge_plain_text_and_tags(
+                    document.get("plain_text", ""),
+                    document.get("tags", [])
+                )
+                transformed_document = {
+                    "document_type": "annotation",
+                    "file_path": document.get("file_path", ""),
+                    "file_name": document.get("file_name", ""),
+                    "meta_tags": {
+                        tag_type: [tag.strip() for tag in tags_str.split(",")]
+                        for tag_type, tags_str in document.get("meta_tags", {}).items()
+                    },
+                    "text": inline_text,
 
-        elif document.get("document_type") == "annotation":
-            inline_text = self._tag_processor.merge_plain_text_and_tags(
-                document.get("plain_text", ""),
-                document.get("tags", [])
-            )
-            transformed_document = {
-                "document_type": "annotation",
-                "file_path": document.get("file_path", ""),
-                "file_name": document.get("file_name", ""),
-                "meta_tags": {
-                    tag_type: [tag.strip() for tag in tags_str.split(",")]
-                    for tag_type, tags_str in document.get("meta_tags", {}).items()
-                },
-                "text": inline_text
+                }
+                data={
+                    "document": transformed_document,
+                }
+            elif document.get("document_type") == "extraction":
+                raise ValueError(
+                    "Extraction document type is not needed to be transformed.")
+            else:
+                raise ValueError(
+                    f"Unknown document type: {document.get('document_type')}")
+        else:#schema 1
+            data = {
+                "document": document
             }
-        elif document.get("document_type") == "extraction":
-            raise ValueError(
-                "Extraction document type is not needed to be transformed.")
-        else:
-            raise ValueError(
-                f"Unknown document type: {document.get('document_type')}")
-        return transformed_document
+            if document.get("document_type") == "comparison":
+                data["document"]["document_data"] = {"document": data["document"]["document_data"]}
+        return data
             
-            
+    def _add_tags_to_loaded_document(self, new_document_data: dict, old_document_data: dict=None) -> dict:
+        if new_document_data["document"].get("document_type") == "annotation":
+            if old_document_data: #schema >=2
+                tags = old_document_data.get("tags", [])
+            else: #schema 1
+                document_text = new_document_data["document"]["text"]
+                tags = self._tag_processor._extract_tags_from_text(document_text)
+            new_document_data["tags"] = [TagModel(tag) for tag in tags]
+        elif new_document_data["document"].get("document_type") == "comparison":
+            if old_document_data: #schema >=2
+                merged_document_tags = old_document_data.get("document_data", {}).get("tags", [])
+                comparison_sentences = old_document_data.get("comparison_sentences", [])
+                comparison_tags = [[sentence.get("tags", []) for sentence in group] for group in comparison_sentences]
+            else: #schema 1
+                merged_document_text = new_document_data["document"]["document_data"]["document"]["text"]
+                merged_document_tags = self._tag_processor._extract_tags_from_text(merged_document_text)
+                comparison_sentences = new_document_data["document"]["comparison_sentences"]
+                comparison_tags = []
+                for sentence_group in comparison_sentences:
+                    comparison_tags_group = []
+                    for inline_text in sentence_group:
+                        tags = self._tag_processor._extract_tags_from_text(inline_text)
+                        comparison_tags_group.append(tags)
+                    comparison_tags.append(comparison_tags_group)
+            new_document_data["document"]["document_data"]["tags"] = [TagModel(tag) for tag in merged_document_tags]
+            new_document_data["comparison_tags"] = [[TagModel(tag) for tag in tag_group] for tag_group in comparison_tags]
+        return new_document_data
+        
+
+       

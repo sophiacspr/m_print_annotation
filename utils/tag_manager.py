@@ -49,7 +49,7 @@ class TagManager:
         # Use the TagProcessor to extract tag data
         extracted_tag_data = self._tag_processor._extract_tags_from_text(
             document_text)
-
+#todo only uuid if not given
         tags = []
         # Convert each tag_data dictionary into a TagModel object
         for tag_data in extracted_tag_data:

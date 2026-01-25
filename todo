@@ -1,3 +1,5 @@
+comparison load funktioniert noch nciht in richtiger reihenfolge
+
 tags einheitlich im documentmanager ertellen und dann an controller geben, der sie an die models verteilt. 
 in:
 Zwei versionen.
@@ -11,5 +13,36 @@ Speichern nur noch in Version 2
 Export beide Versionen. 
 
 
+
+tag export.
+uuid
+remove id_name
+enforce homonymflag
+
+
+
+
+{
+    "uuid": "dd4e7b6b-b52f-4742-85e2-8058dfe368da"
+    "tag_type": "VOCAB",
+    "id_name": "vid",
+    "attributes": {
+        "id": "v2",
+        "lemma": "gehen",
+        "english": "walk",
+        "french": "marcher",
+        "spanish": "caminar",
+        "homonym": "true",
+    },
+    "position": 128,
+    "text": "geht",
+    "references": {
+        "id": "v2"
+    },
+    "plain_position": 82
+}
+
+
+language flags
 
 transform raw text to json file

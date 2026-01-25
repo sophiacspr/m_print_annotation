@@ -1266,17 +1266,17 @@ class Controller(IController):
             self._extraction_document_model.set_file_path(file_path=file_path)
             return
 
-        documents = [self._document_manager.load_document(
+        #! here we need tags
+        document_data = [self._document_manager.load_document(
             file_path=file_path) for file_path in file_paths]
+        documents = [doc_data["document"] for doc_data in document_data]
 
         if self._active_view_id == "annotation":
             if len(documents) != 1:
                 raise ValueError(
                     "Too many files selected: Only one file path is allowed when loading a predefined annotation model.")
             self._annotation_document_model.set_document(documents[0])
-            #todo move this extraction for all versions to document manager load
-            self._tag_manager.extract_tags_from_document(
-                self._annotation_document_model)
+            self._annotation_document_model.set_tags(document_data[0]["tags"])
 
         # Load stored comparison_model or set up a new one from multiple documents
         if self._active_view_id == "comparison":
@@ -1332,9 +1332,6 @@ class Controller(IController):
         document = source_model.get_state()
         tags=self._tag_manager.get_all_tags_data(target_model=source_model)
         data=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
-        print(data["plain_text"])
-        from pprint import pprint
-        pprint(data["tags"])
 
     def check_for_saving(self, enforce_check: bool = False) -> None:
         """
@@ -1490,16 +1487,20 @@ class Controller(IController):
         # Step 1: Load document models from stored paths
         source_paths = document["source_paths"]
         source_documents_data = [
-            self._file_handler.read_file(path) for path in source_paths]
+            self._document_manager.load_document(path) for path in source_paths]
 
         raw_model = AnnotationDocumentModel()
-        annotator_models = [AnnotationDocumentModel(
-            data) for data in source_documents_data]
+        annotator_models = []
+        for document_data in source_documents_data:
+            annotator_model= AnnotationDocumentModel(
+                document_data["document"])
+            annotator_model.set_tags(document_data["tags"])
+            annotator_models.append(annotator_model)
+
         document_models = [raw_model] + annotator_models
 
         highlight_models = [HighlightModel() for _ in document_models]
-        for document_model in document_models:
-            self._tag_manager.extract_tags_from_document(document_model)
+
         self._comparison_model.set_document_models(document_models)
         self._comparison_model.set_highlight_models(highlight_models)
 
@@ -1510,8 +1511,13 @@ class Controller(IController):
         self._comparison_model.register_comparison_displays(displays)
 
         # Step 5: Load merged model from inlined `document_data`
+        from pprint import pprint
         merged_document_data = document["document_data"]
-        merged_model = AnnotationDocumentModel(merged_document_data)
+        pprint(merged_document_data)
+        merged_document=merged_document_data["document"]
+        merged_document_tags=merged_document_data.get("tags",[])
+        merged_model = AnnotationDocumentModel(merged_document)
+        merged_model.set_tags(merged_document_tags)
 
         # Step 6: Prepare and set comparison data
         comparison_sentences = document.get("comparison_sentences", [])
