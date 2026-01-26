@@ -1,0 +1,38 @@
+{
+    "plain_text": "Color Highlight Test.\n\nColor Highlight Test.\n\nColor Search Highlight Test.\n\nColor Search Highlight Test.",
+    "tags": [
+        {
+            "tag_type": "TIMEX3",
+            "attributes": {
+                "id": "t1"
+            },
+            "position": 6,
+            "text": "Highlight",
+            "id_name": "tid",
+            "references": {},
+            "plain_position": 6
+        },
+        {
+            "tag_type": "PLACE",
+            "attributes": {
+                "id": "p1"
+            },
+            "position": 55,
+            "text": "Highlight",
+            "id_name": "pid",
+            "references": {},
+            "plain_position": 29
+        },
+        {
+            "tag_type": "TIMEX3",
+            "attributes": {
+                "id": "t2"
+            },
+            "position": 102,
+            "text": "Search",
+            "id_name": "tid",
+            "references": {},
+            "plain_position": 52
+        }
+    ]
+}

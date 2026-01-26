@@ -1324,15 +1324,38 @@ class Controller(IController):
         if file_path:
             self.perform_save(file_path=file_path)
 
-    def _on_export_inline_tags(self) -> None:
-        raise NotImplementedError(f"Exporting inline tags is not yet implemented.")
+    def perform_export_inline_tags(self) -> None:
+        """
+        Exports the current document with inline tags based on the active view.
+        """
+        view_id = self._active_view_id
+        source_model = self._document_source_mapping[view_id]
+        document = source_model.get_state()
+        print(f"DEBUG {document.keys()=}")
+        file_name = document["file_name"]#todo wrong name here
+
+        if view_id == "comparison":
+            document = document["merged_document"].get_state()
+            from pprint import pprint
+            print("#####")
+            pprint(document)
+            path_key="default_comparison_export_v1_directory"
+            file_path=self._file_handler.resolve_path(path_key, f"{file_name}.json")
+            document["file_name"]=file_name
+            document["file_path"]=file_path
+        elif view_id == "annotation":
+            path_key="default_annotation_export_v1_directory"
+        document.pop("tags")
+        self._file_handler.write_file(path_key, document,f"{document['file_name']}.json")
     
-    def perform_export_tag_list_plain_text(self, view_id: str = None) -> None:
-        view_id = view_id or self._active_view_id
+    def perform_export_tag_list_plain_text(self) -> None:
+        view_id = self._active_view_id
         source_model = self._document_source_mapping[view_id]
         document = source_model.get_state()
         tags=self._tag_manager.get_all_tags_data(target_model=source_model)
         data=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
+        self._file_handler.write_file("default_comparison_annotation_v2_directory", data,f"{document['file_name']}.json")
+        print(f"DEBUG ")
 
     def check_for_saving(self, enforce_check: bool = False) -> None:
         """
@@ -1469,6 +1492,7 @@ class Controller(IController):
 
         comparison_data = self._comparison_manager.extract_comparison_data(
             document_models[1:])
+        comparison_data["file_name"] = ""#todo ask user
         self._comparison_model.set_comparison_data(
             comparison_data)
 
@@ -1528,6 +1552,7 @@ class Controller(IController):
         )
 
         comparison_data = {
+            "file_name": document.get("file_name", "Unnamed Comparison"),
             "merged_document": merged_model,
             "comparison_sentences": comparison_sentences,
             "differing_to_global": document.get("differing_to_global", []),

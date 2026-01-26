@@ -18,6 +18,7 @@ class ComparisonModel(IComparisonModel):
         """
         Assign default values to all attributes.
         """
+        self._file_name: str = ""
         self._document_models: list[IDocumentModel] = []
         self._highlight_models: list[HighlightModel] = []
         self._file_names: list[str] = []
@@ -96,7 +97,7 @@ class ComparisonModel(IComparisonModel):
                     - A list of sentences (one per document) to display initially.
                     - A corresponding list of tag lists, each containing ITagModel instances for the sentence.
         """
-
+        self._file_name = comparison_data["file_name"]
         self._merged_document = comparison_data["merged_document"]
         self._comparison_sentences = comparison_data["comparison_sentences"]
         self._adopted_flags: List[int] = [
@@ -233,6 +234,7 @@ class ComparisonModel(IComparisonModel):
         num_sentences = len(
             self._comparison_sentences[0]) if self._comparison_sentences else 0
         state = {
+            "file_name": self._file_name,
             "file_names": self._file_names,
             "num_sentences": num_sentences,
             "current_sentence_index": self._current_index,

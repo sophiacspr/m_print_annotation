@@ -109,13 +109,8 @@ class DocumentManager():
             file_path=file_path)
         document["file_path"] = file_path
 
-        from pprint import pprint
-        pprint(document)
-        print("\n\n")
-
         transformed_document_data = self._transform_document_to_internal_schema(document)
-        pprint(transformed_document_data)
-        print("\n\n")
+
         if document.get("schema_version", 1) >= 2:
             document_data = self._add_tags_to_loaded_document(transformed_document_data,document)
         else:

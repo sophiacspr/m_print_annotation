@@ -1,14 +1,3 @@
-comparison load funktioniert noch nciht in richtiger reihenfolge
-
-tags einheitlich im documentmanager ertellen und dann an controller geben, der sie an die models verteilt. 
-in:
-Zwei versionen.
-Version 1 (alt) inline tags. Werden beim lesen auch version 2 geliftet. 
-Version 2 Tags Liste + plain text
-
-out:
-Speichern nur noch in Version 2
-
 
 Export beide Versionen. 
 
@@ -45,4 +34,17 @@ enforce homonymflag
 
 language flags
 
-transform raw text to json file
+
+done:
+-transform raw text to json file
+
+-comparison load funktioniert noch nicht in richtiger reihenfolge
+
+-tags einheitlich im documentmanager ertellen und dann an controller geben, der sie an die models verteilt. 
+in:
+Zwei versionen.
+Version 1 (alt) inline tags. Werden beim lesen auch version 2 geliftet. 
+Version 2 Tags Liste + plain text
+
+out:
+Speichern nur noch in Version 2
