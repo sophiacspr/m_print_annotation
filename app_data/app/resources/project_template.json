@@ -71,11 +71,11 @@
                         "directories": {
                             "annotation": {
                                 "directories": {
-                                    "v1": {
+                                    "inline": {
                                         "directories": {},
                                         "files": []
                                     },
-                                    "v2": {
+                                    "split": {
                                         "directories": {},
                                         "files": []
                                     }
@@ -84,11 +84,11 @@
                             },
                             "comparison": {
                                 "directories": {
-                                    "v1": {
+                                    "inline": {
                                         "directories": {},
                                         "files": []
                                     },
-                                    "v2": {
+                                    "split": {
                                         "directories": {},
                                         "files": []
                                     }

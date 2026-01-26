@@ -3,10 +3,7 @@ Export beide Versionen.
 
 
 
-tag export.
-uuid
-remove id_name
-enforce homonymflag
+
 
 
 
@@ -48,3 +45,8 @@ Version 2 Tags Liste + plain text
 
 out:
 Speichern nur noch in Version 2
+
+tag export.
+uuid
+remove id_name
+enforce homonymflag

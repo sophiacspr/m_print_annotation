@@ -2,6 +2,7 @@ from commands.add_tag_command import AddTagCommand
 from commands.adopt_annotation_command import AdoptAnnotationCommand
 from commands.delete_tag_command import DeleteTagCommand
 from commands.edit_tag_command import EditTagCommand
+from enums.export_formats import ExportFormat
 from enums.failure_reasons import FailureReason
 from controller.interfaces import IController
 from commands.interfaces import ICommand
@@ -1266,7 +1267,6 @@ class Controller(IController):
             self._extraction_document_model.set_file_path(file_path=file_path)
             return
 
-        #! here we need tags
         document_data = [self._document_manager.load_document(
             file_path=file_path) for file_path in file_paths]
         documents = [doc_data["document"] for doc_data in document_data]
@@ -1285,6 +1285,8 @@ class Controller(IController):
                 if len(documents) > 1:
                     raise ValueError(
                         "Too many files selected: Only one file path is allowed when loading a predefined comparison model.")
+                from pprint import pprint
+                pprint(documents[0].keys())
                 self._load_comparison_model(documents[0])
             else:
                 self._setup_comparison_model(documents)
@@ -1324,22 +1326,24 @@ class Controller(IController):
         if file_path:
             self.perform_save(file_path=file_path)
 
-    def perform_export_inline_tags(self) -> None:
+    def perform_export_document(self,export_format:ExportFormat) -> None:
         """
         Exports the current document with inline tags based on the active view.
+        Args:
+            export_format (ExportFormat): The format to export the document in.
         """
         view_id = self._active_view_id
         source_model = self._document_source_mapping[view_id]
         document = source_model.get_state()
-        print(f"DEBUG {document.keys()=}")
-        file_name = document["file_name"]#todo wrong name here
+        file_name = document["file_name"]
 
         if view_id == "comparison":
+            if export_format == ExportFormat.INLINE:
+                path_key="default_comparison_export_inline_directory"
+            elif export_format == ExportFormat.SPLIT:
+                path_key="default_comparison_export_split_directory"
+            file_name+="_merged"
             document = document["merged_document"].get_state()
-            from pprint import pprint
-            print("#####")
-            pprint(document)
-            path_key="default_comparison_export_v1_directory"
             file_path=self._file_handler.resolve_path(path_key, f"{file_name}.json")
             document["file_name"]=file_name
             document["file_path"]=file_path
