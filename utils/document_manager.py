@@ -36,7 +36,7 @@ class DocumentManager():
                     "Document must contain either 'text' or both 'plain_text' and 'tags' for saving.")
             document_data = {"document_type": view_id,
                              "file_path": file_path,
-                             "file_name": self._file_handler.derive_file_name(file_path),
+                             "file_name": document["file_name"],
                              "meta_tags": {
                                  tag_type: [
                                      ", ".join(str(tag) for tag in tags)]
@@ -150,6 +150,7 @@ class DocumentManager():
                 # Transform comparison document structure
                 transformed_document = {
                     "document_type": "comparison",
+                    "file_name": document.get("file_name", ""),
                     "source_paths": document.get("source_paths", []),
                     "source_file_names": document.get("source_file_names", []),
                     "file_path": document.get("file_path", ""),
