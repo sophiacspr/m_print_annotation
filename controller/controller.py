@@ -1271,6 +1271,7 @@ class Controller(IController):
             file_path=file_path) for file_path in file_paths]
         documents = [doc_data["document"] for doc_data in document_data]
 
+
         if self._active_view_id == "annotation":
             if len(documents) != 1:
                 raise ValueError(
@@ -1511,9 +1512,7 @@ class Controller(IController):
         self._comparison_model.register_comparison_displays(displays)
 
         # Step 5: Load merged model from inlined `document_data`
-        from pprint import pprint
         merged_document_data = document["document_data"]
-        pprint(merged_document_data)
         merged_document=merged_document_data["document"]
         merged_document_tags=merged_document_data.get("tags",[])
         merged_model = AnnotationDocumentModel(merged_document)
@@ -1521,6 +1520,7 @@ class Controller(IController):
 
         # Step 6: Prepare and set comparison data
         comparison_sentences = document.get("comparison_sentences", [])
+        
         current_index = document.get("current_sentence_index", 0)
         start_data = self._comparison_manager.get_start_data(
             sentence_index=current_index,
@@ -1533,6 +1533,7 @@ class Controller(IController):
             "differing_to_global": document.get("differing_to_global", []),
             "start_data": start_data,
         }
+
         self._comparison_model.set_comparison_data(comparison_data)
 
         # Step 7: Restore internal flags and index

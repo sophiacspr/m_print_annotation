@@ -109,7 +109,13 @@ class DocumentManager():
             file_path=file_path)
         document["file_path"] = file_path
 
+        from pprint import pprint
+        pprint(document)
+        print("\n\n")
+
         transformed_document_data = self._transform_document_to_internal_schema(document)
+        pprint(transformed_document_data)
+        print("\n\n")
         if document.get("schema_version", 1) >= 2:
             document_data = self._add_tags_to_loaded_document(transformed_document_data,document)
         else:
@@ -149,8 +155,8 @@ class DocumentManager():
                 # Transform comparison document structure
                 transformed_document = {
                     "document_type": "comparison",
-                    "source_paths": document.get("source_file_paths", []),
-                    "source_file_names": document.get("file_names", []),
+                    "source_paths": document.get("source_paths", []),
+                    "source_file_names": document.get("source_file_names", []),
                     "file_path": document.get("file_path", ""),
                     "num_sentences": document.get("num_sentences", 0),
                     "current_sentence_index": document.get("current_sentence_index", 0),
