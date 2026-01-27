@@ -233,7 +233,7 @@ class TagModel(ITagModel):
         """
         self._tag_data["references"] = references
 
-    def get_tag_data(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """
         Returns the complete internal tag data as a dictionary.
 
