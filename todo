@@ -1,13 +1,14 @@
-
-Export beide Versionen. 
-
+language flags
 
 
 
 
 
 
+Format Anzeige
+<VOCAB vid=v2 lemma=gehen translation="enfres" homonym=true>geht<\VOCAB>
 
+FORMAT out:
 {
     "uuid": "dd4e7b6b-b52f-4742-85e2-8058dfe368da"
     "tag_type": "VOCAB",
@@ -29,7 +30,6 @@ Export beide Versionen.
 }
 
 
-language flags
 
 
 done:
@@ -50,3 +50,4 @@ tag export.
 uuid
 remove id_name
 enforce homonymflag
+Export beide Versionen. 
