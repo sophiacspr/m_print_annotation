@@ -230,6 +230,7 @@ class ComparisonModel(IComparisonModel):
                 - "comparison_sentences": List of sentence lists (one per document)
                 - "adopted_flags": List of sentence adoption status flags
                 - "differing_to_global": List of binary flags indicating structural differences
+                - "merged_document": state of the merged document
         """
         num_sentences = len(
             self._comparison_sentences[0]) if self._comparison_sentences else 0
@@ -245,7 +246,7 @@ class ComparisonModel(IComparisonModel):
         }
 
         if self._merged_document:
-            state["merged_document"] = self._merged_document
+            state["merged_document"] = self._merged_document.get_state()
 
         if self._document_models:
             state["source_file_paths"] = [doc.get_file_path()
@@ -353,6 +354,7 @@ class ComparisonModel(IComparisonModel):
         Returns:
             List[ITagModel]: A list of tag model instances.
         """
+        #todo warum hat das model einen tag zu wenig?
         return self._document_models[0].get_tags()
 
     def set_tags(self, tags: List[ITagModel]) -> None:

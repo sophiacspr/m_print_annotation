@@ -5,6 +5,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import simpledialog
 from typing import Any, List, Optional
+from enums.export_formats import ExportFormat
 from enums.menu_pages import MenuPage, MenuSubpage
 from observer.interfaces import IObserver, IPublisher
 from typing import Dict
@@ -157,11 +158,11 @@ class MainWindow(tk.Tk, IObserver):
     def _on_save_as(self) -> None:
         self._controller.perform_save_as()
 
-    def _on_export_tag_list_plain_text(self) -> None:
-        self._controller.perform_export_tag_list_plain_text()
-
     def _on_export_inline_tags(self) -> None:
-        self._controller.perform_export_inline_tags()
+        self._controller.perform_export_document(ExportFormat.INLINE)
+    
+    def _on_export_tag_list_plain_text(self) -> None:
+        self._controller.perform_export_document(ExportFormat.SPLIT)
 
     # Project actions
     def _on_new_project(self):

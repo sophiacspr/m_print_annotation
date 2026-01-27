@@ -1285,8 +1285,6 @@ class Controller(IController):
                 if len(documents) > 1:
                     raise ValueError(
                         "Too many files selected: Only one file path is allowed when loading a predefined comparison model.")
-                from pprint import pprint
-                pprint(documents[0].keys())
                 self._load_comparison_model(documents[0])
             else:
                 self._setup_comparison_model(documents)
@@ -1337,30 +1335,30 @@ class Controller(IController):
         document = source_model.get_state()
         file_name = document["file_name"]
 
+        format = export_format.name.lower()
+        path_key=f"default_{view_id}_export_{format}_directory"
+
         if view_id == "comparison":
-            if export_format == ExportFormat.INLINE:
-                path_key="default_comparison_export_inline_directory"
-            elif export_format == ExportFormat.SPLIT:
-                path_key="default_comparison_export_split_directory"
             file_name+="_merged"
-            document = document["merged_document"].get_state()
+            document = document["merged_document"]
             file_path=self._file_handler.resolve_path(path_key, f"{file_name}.json")
             document["file_name"]=file_name
             document["file_path"]=file_path
-        elif view_id == "annotation":
-            path_key="default_annotation_export_v1_directory"
-        document.pop("tags")
-        self._file_handler.write_file(path_key, document,f"{document['file_name']}.json")
+        if export_format == ExportFormat.INLINE:
+            document.pop("tags", None)
+        elif export_format == ExportFormat.SPLIT:
+            print(f"DEBUG split start")
+            from pprint import pprint
+            print(f"DEBUG before")
+            pprint([str(tag) for tag in document["tags"]])
+            tags=[tag.get_tag_data() for tag in document["tags"]]
+            # tags=self._tag_manager.get_all_tags_data(target_model=source_model)
+            document=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
+            print(f"DEBUG after")
+            pprint([tag for tag in document["tags"]])
+            print(f"DEBUG split end")
+        self._file_handler.write_file(path_key, document,f"{file_name}.json")
     
-    def perform_export_tag_list_plain_text(self) -> None:
-        view_id = self._active_view_id
-        source_model = self._document_source_mapping[view_id]
-        document = source_model.get_state()
-        tags=self._tag_manager.get_all_tags_data(target_model=source_model)
-        data=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
-        self._file_handler.write_file("default_comparison_annotation_v2_directory", data,f"{document['file_name']}.json")
-        print(f"DEBUG ")
-
     def check_for_saving(self, enforce_check: bool = False) -> None:
         """
         Checks the SaveStateModel for any dirty (unsaved) views and prompts the user
@@ -1540,7 +1538,7 @@ class Controller(IController):
         self._comparison_model.register_comparison_displays(displays)
 
         # Step 5: Load merged model from inlined `document_data`
-        merged_document_data = document["document_data"]
+        merged_document_data = document["merged_document_data"]
         merged_document=merged_document_data["document"]
         merged_document_tags=merged_document_data.get("tags",[])
         merged_model = AnnotationDocumentModel(merged_document)

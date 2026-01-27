@@ -1,0 +1,7 @@
+{
+    "document_type": "annotation",
+    "file_path": "C:/Users/tonig/m_print/m_print_annotation/data/GREED/documents/annotation/color_test.json",
+    "file_name": "color_test",
+    "meta_tags": {},
+    "text": "Color <TIMEX3 tid=\"t1\">Highlight</TIMEX3> Test.\n\nColor <PLACE pid=\"p1\">Highlight</PLACE> Test.\n\nColor <TIMEX3 tid=\"t2\">Search</TIMEX3> Highlight Test.\n\nColor Search Highlight Test."
+}

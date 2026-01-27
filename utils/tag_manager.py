@@ -278,47 +278,6 @@ class TagManager:
                 tag.set_position(tag_position + offset)
         target_model.set_tags(tags)
 
-    def _resolve_references(self, references: Dict[str, Union[str, ITagModel]], target_model: IDocumentModel) -> Dict[str, ITagModel]:
-        """
-        Resolves reference values in the `references` dictionary by linking them to actual TagModel objects.
-
-        - If the reference values are strings, they are resolved by matching against tag IDs.
-        - If the reference values are TagModel instances, they are assumed to come from another document.
-        In this case, the method searches for a tag in the target model whose UUID is listed among the
-        equivalent UUIDs of the reference tag. If no such tag is found, the reference is considered
-        unresolved and the tag is registered in the ComparisonModel for later resolution.
-
-        Args:
-            references (Dict[str, Union[str, ITagModel]]): A dictionary mapping attribute names to either tag IDs or TagModel objects.
-            target_model (IDocumentModel): The document model in which references should be resolved.
-
-        Returns:
-            Dict[str, ITagModel]: A dictionary with resolved references (attribute name to TagModel).
-        """
-        tags = target_model.get_tags()
-        resolved_references = {}
-
-        for key, ref in references.items():
-            if isinstance(ref, str):
-                for tag in tags:
-                    if tag.get_id() == ref:
-                        resolved_references[key] = tag
-                        tag.increment_reference_count()
-                        break
-            else:
-                found = False
-                for tag in tags:
-                    if tag.get_uuid() in ref.get_equivalent_uuids():
-                        resolved_references[key] = tag
-                        tag.increment_reference_count()
-                        found = True
-                        break
-                if not found:
-                    self._comparison_model.add_unresolved_reference(ref)
-                    resolved_references[key] = ref
-
-        return resolved_references
-
     def is_deletion_prohibited(self, uuid: str, target_model: IDocumentModel) -> bool:
         """
         Checks whether a tag is protected from deletion due to existing references.

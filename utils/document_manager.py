@@ -61,18 +61,18 @@ class DocumentManager():
                 new_comparison_sentences.append(new_version)
 
 
-            document_data = {}
+            merged_document_data = {}
             merged_document = document.get("merged_document", {})
-            document_data["file_name"]=merged_document.get_file_name()
-            document_data["file_path"]=merged_document.get_file_path()
-            document_data["meta_tags"]={
+            merged_document_data["file_name"]=merged_document.get_file_name()
+            merged_document_data["file_path"]=merged_document.get_file_path()
+            merged_document_data["meta_tags"]={
                 tag_type: [", ".join(str(tag) for tag in tags)]
                 for tag_type, tags in merged_document.get_meta_tags().items()
             }
             inline_text=merged_document.get_text()
             plain_tags_and_tags=self._tag_processor.get_plain_text_and_tags(inline_text)
-            document_data["plain_text"]=plain_tags_and_tags["plain_text"]
-            document_data["tags"]=plain_tags_and_tags["tags"]
+            merged_document_data["plain_text"]=plain_tags_and_tags["plain_text"]
+            merged_document_data["tags"]=plain_tags_and_tags["tags"]
 
             document_data = {
                 "document_type": "comparison",
@@ -84,7 +84,7 @@ class DocumentManager():
                 "comparison_sentences": new_comparison_sentences,
                 "adopted_flags": document.get("adopted_flags", []),
                 "differing_to_global": document.get("differing_to_global", []),
-                "document_data": document_data,
+                "merged_document_data": merged_document_data,
                 "schema_version": 2
                 }
             
@@ -159,7 +159,7 @@ class DocumentManager():
                     "comparison_sentences": [],
                     "adopted_flags": document.get("adopted_flags", []),
                     "differing_to_global": document.get("differing_to_global", []),
-                    "document_data": {}
+                    "merged_document_data": {}
                 }
                 for sentence_group in document.get("comparison_sentences", []):
                     transformed_group = []
@@ -171,7 +171,7 @@ class DocumentManager():
                         transformed_group.append(inline_text)
                     transformed_document["comparison_sentences"].append(transformed_group)
 
-                old_merged_document_data = document.get("document_data", {})
+                old_merged_document_data = document.get("merged_document_data", {})
                 merged_inline_text = self._tag_processor.merge_plain_text_and_tags(
                     old_merged_document_data.get("plain_text", ""),
                     old_merged_document_data.get("tags", [])
@@ -187,7 +187,7 @@ class DocumentManager():
                         "text": merged_inline_text
                     }
                 }
-                transformed_document["document_data"] = new_merged_document_data
+                transformed_document["merged_document_data"] = new_merged_document_data
                 data={
                     "document": transformed_document,
                 }
@@ -222,7 +222,7 @@ class DocumentManager():
                 "document": document
             }
             if document.get("document_type") == "comparison":
-                data["document"]["document_data"] = {"document": data["document"]["document_data"]}
+                data["document"]["merged_document_data"] = {"document": data["document"]["merged_document_data"]}
         return data
             
     def _add_tags_to_loaded_document(self, new_document_data: dict, old_document_data: dict=None) -> dict:
@@ -235,11 +235,11 @@ class DocumentManager():
             new_document_data["tags"] = [TagModel(tag) for tag in tags]
         elif new_document_data["document"].get("document_type") == "comparison":
             if old_document_data: #schema >=2
-                merged_document_tags = old_document_data.get("document_data", {}).get("tags", [])
+                merged_document_tags = old_document_data.get("merged_document_data", {}).get("tags", [])
                 comparison_sentences = old_document_data.get("comparison_sentences", [])
                 comparison_tags = [[sentence.get("tags", []) for sentence in group] for group in comparison_sentences]
             else: #schema 1
-                merged_document_text = new_document_data["document"]["document_data"]["document"]["text"]
+                merged_document_text = new_document_data["document"]["merged_document_data"]["document"]["text"]
                 merged_document_tags = self._tag_processor._extract_tags_from_text(merged_document_text)
                 comparison_sentences = new_document_data["document"]["comparison_sentences"]
                 comparison_tags = []
@@ -249,7 +249,7 @@ class DocumentManager():
                         tags = self._tag_processor._extract_tags_from_text(inline_text)
                         comparison_tags_group.append(tags)
                     comparison_tags.append(comparison_tags_group)
-            new_document_data["document"]["document_data"]["tags"] = [TagModel(tag) for tag in merged_document_tags]
+            new_document_data["document"]["merged_document_data"]["tags"] = [TagModel(tag) for tag in merged_document_tags]
             new_document_data["comparison_tags"] = [[TagModel(tag) for tag in tag_group] for tag_group in comparison_tags]
         return new_document_data
         

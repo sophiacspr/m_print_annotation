@@ -250,31 +250,8 @@ class TagModel(ITagModel):
                 - "uuid" (str): The unique identifier for the tag.
                 - "id_name" (str): The name of the ID attribute.
                 - "references" (Dict[str, ITagModel]): Attribute-to-tag reference mapping.
-                - "equivalent_uuids" (List[str]): List of UUIDs this tag is equivalent to.
         """
         return self._tag_data
-
-    def get_equivalent_uuids(self) -> List[str]:
-        """
-        Returns the list of UUIDs that are considered equivalent to this tag.
-
-        Returns:
-            List[str]: A list of UUIDs including this tag's own UUID and those of equivalent tags.
-        """
-        return self._equivalent_uuids
-
-    def set_equivalent_uuids(self, uuids: List[str]) -> None:
-        """
-        Sets the list of equivalent UUIDs for this tag, removing duplicates.
-
-        Args:
-            uuids (List[str]): A list of UUIDs considered equivalent to this tag.
-        """
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_uuids = [uuid for uuid in uuids if not (
-            uuid in seen or seen.add(uuid))]
-        self._tag_data["equivalent_uuids"] = unique_uuids
 
     def __str__(self) -> str:
         """
