@@ -49,7 +49,7 @@ class AdoptAnnotationCommand(ICommand):
         self._sentence_offset = self._comparison_model.get_sentence_offset()
 
         for tag in self._tag_models:
-            tag_data = tag.get_tag_data()
+            tag_data = tag.to_dict()
             tag_data["position"] += self._sentence_offset
             uuid = self._tag_manager.add_tag(tag_data, self._target_model)
             self._inserted_uuids.append(uuid)
@@ -69,7 +69,7 @@ class AdoptAnnotationCommand(ICommand):
             self._tag_manager.delete_tag(uuid, self._target_model)
 
         for tag in self._tag_models:
-            tag_data = tag.get_tag_data()
+            tag_data = tag.to_dict()
             tag.set_position(tag_data["position"] - self._sentence_offset)
 
         self._comparison_model.unmark_sentence_as_adopted(
@@ -87,7 +87,7 @@ class AdoptAnnotationCommand(ICommand):
             return
 
         for tag in self._tag_models:
-            tag_data = tag.get_tag_data()
+            tag_data = tag.to_dict()
             tag_data["position"] += self._sentence_offset
             uuid = self._tag_manager.add_tag(tag_data, self._target_model)
             self._inserted_uuids.append(uuid)

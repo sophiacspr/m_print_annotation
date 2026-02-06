@@ -32,25 +32,6 @@ class TagModel(ITagModel):
         self._tag_data = tag_data
         self._incoming_references_count = 0
 
-    def _compute_hash(self) -> str:
-        """
-        Computes a content-based hash excluding positional data.
-        """
-        tag_type = self._tag_data.get("tag_type", "")
-        text = self._tag_data.get("text", "")
-        attributes = {k: v for k, v in self._tag_data.get(
-            "attributes", {}).items() if k != "id"}
-        references = sorted(self._tag_data.get("references", {}).keys())
-
-        signature = "|".join([
-            tag_type,
-            text,
-            str(sorted(attributes.items())),
-            str(references)
-        ])
-
-        return md5(signature.encode("utf-8")).hexdigest()
-
     def increment_reference_count(self) -> None:
         """
         Increments the count of incoming references to this tag.
@@ -144,6 +125,24 @@ class TagModel(ITagModel):
         """
         self._tag_data["tag_type"] = tag_type
 
+    def get_plain_position(self) -> int:
+        """
+        Retrieves the plain text position of the tag.
+
+        Returns:
+            int: The position of the tag in the plain text.
+        """
+        return self._tag_data.get("plain_position", 0)
+    
+    def set_plain_position(self, position: int) -> None:
+        """
+        Sets the plain text position of the tag.
+
+        Args:
+            position (int): The new plain text position of the tag.
+        """
+        self._tag_data["plain_position"] = position
+
     def get_position(self) -> int:
         """
         Retrieves the position of the tag.
@@ -234,7 +233,7 @@ class TagModel(ITagModel):
         """
         self._tag_data["references"] = references
 
-    def get_tag_data(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """
         Returns the complete internal tag data as a dictionary.
 
@@ -251,31 +250,8 @@ class TagModel(ITagModel):
                 - "uuid" (str): The unique identifier for the tag.
                 - "id_name" (str): The name of the ID attribute.
                 - "references" (Dict[str, ITagModel]): Attribute-to-tag reference mapping.
-                - "equivalent_uuids" (List[str]): List of UUIDs this tag is equivalent to.
         """
         return self._tag_data
-
-    def get_equivalent_uuids(self) -> List[str]:
-        """
-        Returns the list of UUIDs that are considered equivalent to this tag.
-
-        Returns:
-            List[str]: A list of UUIDs including this tag's own UUID and those of equivalent tags.
-        """
-        return self._equivalent_uuids
-
-    def set_equivalent_uuids(self, uuids: List[str]) -> None:
-        """
-        Sets the list of equivalent UUIDs for this tag, removing duplicates.
-
-        Args:
-            uuids (List[str]): A list of UUIDs considered equivalent to this tag.
-        """
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_uuids = [uuid for uuid in uuids if not (
-            uuid in seen or seen.add(uuid))]
-        self._tag_data["equivalent_uuids"] = unique_uuids
 
     def __str__(self) -> str:
         """

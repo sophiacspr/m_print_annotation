@@ -2,6 +2,7 @@ from commands.add_tag_command import AddTagCommand
 from commands.adopt_annotation_command import AdoptAnnotationCommand
 from commands.delete_tag_command import DeleteTagCommand
 from commands.edit_tag_command import EditTagCommand
+from enums.export_formats import ExportFormat
 from enums.failure_reasons import FailureReason
 from controller.interfaces import IController
 from commands.interfaces import ICommand
@@ -24,6 +25,7 @@ from observer.interfaces import IPublisher, IObserver, IPublisher, IObserver
 from typing import Any, Callable, Dict, List,  Tuple
 from utils.color_manager import ColorManager
 from utils.comparison_manager import ComparisonManager
+from utils.document_manager import DocumentManager
 from utils.project_configuration_manager import ProjectConfigurationManager
 from utils.path_manager import PathManager
 from utils.pdf_extraction_manager import PDFExtractionManager
@@ -81,6 +83,10 @@ class Controller(IController):
         self._tag_manager = TagManager(self, self._tag_processor)
         self._comparison_manager = ComparisonManager(self, self._tag_processor)
         self._pdf_extraction_manager = PDFExtractionManager(controller=self)
+        self._document_manager = DocumentManager(
+            file_handler=self._file_handler,
+            tag_processor=self._tag_processor
+        )
 
         self._search_manager = SearchManager(file_handler=self._file_handler)
         self._search_model_manager = SearchModelManager(self._search_manager)
@@ -1261,18 +1267,17 @@ class Controller(IController):
             self._extraction_document_model.set_file_path(file_path=file_path)
             return
 
-        documents = [self._file_handler.read_file(
+        document_data = [self._document_manager.load_document(
             file_path=file_path) for file_path in file_paths]
-        for document, path in zip(documents, file_paths):
-            document["file_path"] = path
+        documents = [doc_data["document"] for doc_data in document_data]
+
 
         if self._active_view_id == "annotation":
             if len(documents) != 1:
                 raise ValueError(
                     "Too many files selected: Only one file path is allowed when loading a predefined annotation model.")
             self._annotation_document_model.set_document(documents[0])
-            self._tag_manager.extract_tags_from_document(
-                self._annotation_document_model)
+            self._annotation_document_model.set_tags(document_data[0]["tags"])
 
         # Load stored comparison_model or set up a new one from multiple documents
         if self._active_view_id == "comparison":
@@ -1297,52 +1302,11 @@ class Controller(IController):
             self.perform_save_as()
             return
 
-        # prepare data for saving
-        if not view_id == "comparison":
-            document_data = {"document_type": view_id,
-                             "file_path": file_path,
-                             "file_name": self._file_handler.derive_file_name(file_path),
-                             "meta_tags": {
-                                 tag_type: [
-                                     ", ".join(str(tag) for tag in tags)]
-                                 for tag_type, tags in document.get("meta_tags", {}).items()
-                             },
-                             "text": document["text"]}
-        else:
-            merged_document = document.get("merged_document", {})
-            # prepare data for comparison view
-            document_data = {
-                "document_type": "comparison",
-                "source_paths": document["source_file_paths"],
-                "source_file_names": document.get("file_names", []),
-                "file_path": file_path,
-                "num_sentences": document.get("num_sentences", 0),
-                "current_sentence_index": document.get("current_sentence_index", 0),
-                "comparison_sentences": document.get("comparison_sentences", []),
-                "adopted_flags": document.get("adopted_flags", []),
-                "differing_to_global": document.get("differing_to_global", []),
-                "document_data": {
-                    "document_type": "annotation",
-                    "file_name": merged_document.get_file_name(),
-                    "file_path": merged_document.get_file_path(),
-                    "meta_tags": {
-                        tag_type: [", ".join(str(tag) for tag in tags)]
-                        for tag_type, tags in merged_document.get_meta_tags().items()
-                    },
-                    "text": merged_document.get_text(),
-                }
-            }
-
-        if document_data:
-            success = self._file_handler.write_file(file_path, document_data)
-            if not success:
-                raise IOError(
-                    f"Failed to save document to {file_path}. Please check the file path and permissions.")
-            self._save_state_model.reset_key(self._active_view_id)
-
-        else:
-            raise ValueError(
-                "No valid document data found for saving. Ensure the active view is set correctly.")
+        success = self._document_manager.save_document(file_path, document, view_id)
+        if not success:
+            raise IOError(
+                f"Failed to save document to {file_path}. Please check the file path and permissions.")
+        self._save_state_model.reset_key(self._active_view_id)
 
     def perform_save_as(self) -> None:
         """
@@ -1360,19 +1324,41 @@ class Controller(IController):
         if file_path:
             self.perform_save(file_path=file_path)
 
-    def _on_export_inline_tags(self) -> None:
-        raise NotImplementedError(f"Exporting inline tags is not yet implemented.")
-    
-    def perform_export_tag_list_plain_text(self, view_id: str = None) -> None:
-        view_id = view_id or self._active_view_id
+    def perform_export_document(self,export_format:ExportFormat) -> None:
+        """
+        Exports the current document with inline tags based on the active view.
+        Args:
+            export_format (ExportFormat): The format to export the document in.
+        """
+        view_id = self._active_view_id
         source_model = self._document_source_mapping[view_id]
         document = source_model.get_state()
-        tags=self._tag_manager.get_all_tags_data(target_model=source_model)
-        data=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
-        print(data["plain_text"])
-        from pprint import pprint
-        pprint(data["tags"])
+        file_name = document["file_name"]
 
+        format = export_format.name.lower()
+        path_key=f"default_{view_id}_export_{format}_directory"
+
+        if view_id == "comparison":
+            file_name+="_merged"
+            document = document["merged_document"]
+            file_path=self._file_handler.resolve_path(path_key, f"{file_name}.json")
+            document["file_name"]=file_name
+            document["file_path"]=file_path
+        if export_format == ExportFormat.INLINE:
+            document.pop("tags", None)
+        elif export_format == ExportFormat.SPLIT:
+            print(f"DEBUG split start")
+            from pprint import pprint
+            print(f"DEBUG before")
+            pprint([str(tag) for tag in document["tags"]])
+            tags=[tag.get_tag_data() for tag in document["tags"]]
+            # tags=self._tag_manager.get_all_tags_data(target_model=source_model)
+            document=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
+            print(f"DEBUG after")
+            pprint([tag for tag in document["tags"]])
+            print(f"DEBUG split end")
+        self._file_handler.write_file(path_key, document,f"{file_name}.json")
+    
     def check_for_saving(self, enforce_check: bool = False) -> None:
         """
         Checks the SaveStateModel for any dirty (unsaved) views and prompts the user
@@ -1508,6 +1494,7 @@ class Controller(IController):
 
         comparison_data = self._comparison_manager.extract_comparison_data(
             document_models[1:])
+        comparison_data["file_name"] = ""#todo ask user
         self._comparison_model.set_comparison_data(
             comparison_data)
 
@@ -1527,16 +1514,20 @@ class Controller(IController):
         # Step 1: Load document models from stored paths
         source_paths = document["source_paths"]
         source_documents_data = [
-            self._file_handler.read_file(path) for path in source_paths]
+            self._document_manager.load_document(path) for path in source_paths]
 
         raw_model = AnnotationDocumentModel()
-        annotator_models = [AnnotationDocumentModel(
-            data) for data in source_documents_data]
+        annotator_models = []
+        for document_data in source_documents_data:
+            annotator_model= AnnotationDocumentModel(
+                document_data["document"])
+            annotator_model.set_tags(document_data["tags"])
+            annotator_models.append(annotator_model)
+
         document_models = [raw_model] + annotator_models
 
         highlight_models = [HighlightModel() for _ in document_models]
-        for document_model in document_models:
-            self._tag_manager.extract_tags_from_document(document_model)
+
         self._comparison_model.set_document_models(document_models)
         self._comparison_model.set_highlight_models(highlight_models)
 
@@ -1547,11 +1538,15 @@ class Controller(IController):
         self._comparison_model.register_comparison_displays(displays)
 
         # Step 5: Load merged model from inlined `document_data`
-        merged_document_data = document["document_data"]
-        merged_model = AnnotationDocumentModel(merged_document_data)
+        merged_document_data = document["merged_document_data"]
+        merged_document=merged_document_data["document"]
+        merged_document_tags=merged_document_data.get("tags",[])
+        merged_model = AnnotationDocumentModel(merged_document)
+        merged_model.set_tags(merged_document_tags)
 
         # Step 6: Prepare and set comparison data
         comparison_sentences = document.get("comparison_sentences", [])
+        
         current_index = document.get("current_sentence_index", 0)
         start_data = self._comparison_manager.get_start_data(
             sentence_index=current_index,
@@ -1559,11 +1554,13 @@ class Controller(IController):
         )
 
         comparison_data = {
+            "file_name": document.get("file_name", "Unnamed Comparison"),
             "merged_document": merged_model,
             "comparison_sentences": comparison_sentences,
             "differing_to_global": document.get("differing_to_global", []),
             "start_data": start_data,
         }
+
         self._comparison_model.set_comparison_data(comparison_data)
 
         # Step 7: Restore internal flags and index
@@ -1604,7 +1601,7 @@ class Controller(IController):
             sentence_func (Callable[[], List[str]]): Function to retrieve the target sentence(s).
         """
         sentences = sentence_func()
-        tags = [[TagModel(tag_data) for tag_data in self._tag_processor.extract_tags_from_text(
+        tags = [[TagModel(tag_data) for tag_data in self._tag_processor._extract_tags_from_text(
             sentence)] for sentence in sentences]
         self._comparison_model.update_documents(sentences, tags)
 

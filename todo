@@ -1,1 +1,53 @@
-check were to save the separated export files, and how to read
+language flags
+
+
+
+
+
+
+Format Anzeige
+<VOCAB vid=v2 lemma=gehen translation="enfres" homonym=true>geht<\VOCAB>
+
+FORMAT out:
+{
+    "uuid": "dd4e7b6b-b52f-4742-85e2-8058dfe368da"
+    "tag_type": "VOCAB",
+    "id_name": "vid",
+    "attributes": {
+        "id": "v2",
+        "lemma": "gehen",
+        "english": "walk",
+        "french": "marcher",
+        "spanish": "caminar",
+        "homonym": "true",
+    },
+    "position": 128,
+    "text": "geht",
+    "references": {
+        "id": "v2"
+    },
+    "plain_position": 82
+}
+
+
+
+
+done:
+-transform raw text to json file
+
+-comparison load funktioniert noch nicht in richtiger reihenfolge
+
+-tags einheitlich im documentmanager ertellen und dann an controller geben, der sie an die models verteilt. 
+in:
+Zwei versionen.
+Version 1 (alt) inline tags. Werden beim lesen auch version 2 geliftet. 
+Version 2 Tags Liste + plain text
+
+out:
+Speichern nur noch in Version 2
+
+tag export.
+uuid
+remove id_name
+enforce homonymflag
+Export beide Versionen. 

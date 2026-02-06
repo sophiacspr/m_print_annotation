@@ -47,9 +47,9 @@ class TagManager:
         document_text = target_model.get_text()
 
         # Use the TagProcessor to extract tag data
-        extracted_tag_data = self._tag_processor.extract_tags_from_text(
+        extracted_tag_data = self._tag_processor._extract_tags_from_text(
             document_text)
-
+#todo only uuid if not given
         tags = []
         # Convert each tag_data dictionary into a TagModel object
         for tag_data in extracted_tag_data:
@@ -306,16 +306,17 @@ class TagManager:
                         tag.increment_reference_count()
                         break
             else:
-                found = False
-                for tag in tags:
-                    if tag.get_uuid() in ref.get_equivalent_uuids():
-                        resolved_references[key] = tag
-                        tag.increment_reference_count()
-                        found = True
-                        break
-                if not found:
-                    self._comparison_model.add_unresolved_reference(ref)
-                    resolved_references[key] = ref
+                raise NotImplementedError("Reference resolving from external TagModel is not implemented yet.")
+                # found = False
+                # for tag in tags:
+                #     if tag.get_uuid() in ref.get_equivalent_uuids():
+                #         resolved_references[key] = tag
+                #         tag.increment_reference_count()
+                #         found = True
+                #         break
+                # if not found:
+                #     self._comparison_model.add_unresolved_reference(ref)
+                #     resolved_references[key] = ref
 
         return resolved_references
 
@@ -363,7 +364,7 @@ class TagManager:
         tags = target_model.get_tags()
         for tag in tags:
             if tag.get_uuid() == tag_uuid:
-                return tag.get_tag_data()
+                return tag.to_dict()
 
         raise ValueError(f"Tag with UUID {tag_uuid} does not exist.")
     
@@ -379,7 +380,7 @@ class TagManager:
         """
         # Get tags from current model
         tags = target_model.get_tags()
-        return [tag.get_tag_data() for tag in tags]
+        return [tag.to_dict() for tag in tags]
 
     def get_highlight_data(self, target_model: IDocumentModel) -> List[Tuple[str, int, int]]:
         """
@@ -431,7 +432,7 @@ class TagManager:
         """
         meta_tags = {}
         for tag_type, meta_tag_strings in tag_strings.items():
-            tag_data = self._tag_processor.extract_tags_from_text(
+            tag_data = self._tag_processor._extract_tags_from_text(
                 meta_tag_strings)
             tags = []
             for tag in tag_data:
@@ -463,7 +464,7 @@ class TagManager:
                      for sentence in sentences[:global_index])
 
         # Extract tag data from sentence
-        extracted_tag_data = self._tag_processor.extract_tags_from_text(
+        extracted_tag_data = self._tag_processor._extract_tags_from_text(
             sentence)
 
         for tag_data in extracted_tag_data:

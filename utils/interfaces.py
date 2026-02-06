@@ -129,7 +129,7 @@ class ITagProcessor(ABC):
         pass
 
     @abstractmethod
-    def extract_tags_from_text(self, text: str) -> List[Dict]:
+    def _extract_tags_from_text(self, text: str) -> List[Dict]:
         """
         Extracts tag information from the text.
 

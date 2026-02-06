@@ -83,7 +83,7 @@ class ComparisonManager:
             comparison_sentences = self._comparison_sentences
         start_sentences = [
             sentences[sentence_index] for sentences in comparison_sentences]
-        start_tags = [[TagModel(tag_data) for tag_data in self._tag_processor.extract_tags_from_text(
+        start_tags = [[TagModel(tag_data) for tag_data in self._tag_processor._extract_tags_from_text(
             sentence)] for sentence in start_sentences]
         return start_sentences, start_tags
 
