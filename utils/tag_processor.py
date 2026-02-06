@@ -195,6 +195,104 @@ class TagProcessor(ITagProcessor):
 
         return re.sub(tag_pattern, lambda match: match.group("content"), text)
 
+    def extract_plain_text(self, text: str) -> str:
+        """
+        Extracts the plain text from the given text by removing all tags.
+
+        This method uses the delete_all_tags_from_text method to remove all XML-like tags
+        and return only the enclosed content.
+
+        Args:
+            text (str): The input text containing tags.
+
+        Returns:
+            str: The plain text with all tags removed.
+        """
+        return self.delete_all_tags_from_text(text)
+
+    def get_plain_text_and_tags(self, text: str, tags:list[dict]) -> Dict[str, any]:
+        """
+        Extracts both the plain text and the list of tags from the given text.
+
+        This method first extracts all tags using extract_tags_from_text, then removes all tags
+        to get the plain text using delete_all_tags_from_text.
+
+        Args:
+            text (str): The input text containing tags.
+            tags (list[dict]): List of tag dictionaries extracted from the text.
+
+        Returns:
+            Dict[str, any]: A dictionary with "plain_text" (str) and "tags" (List[Dict]).
+        """
+        plain_text = self.extract_plain_text(text)
+        tags=self.add_plain_positions_to_tags(tags, text, plain_text)
+        return {"plain_text": plain_text, "tags": tags}
+    
+    def add_plain_positions_to_tags(self, tags: List[Dict], original_text: str, plain_text: str) -> List[Dict]:
+        """
+        Adds plain_position to each tag dict, indicating the start index of the tag's inner text in plain_text.
+
+        Args:
+            tags (List[Dict]): List of tag dictionaries from extract_tags_from_text.
+            original_text (str): The original text with tags.
+            plain_text (str): The plain text with tags removed.
+
+        Returns:
+            List[Dict]: The tags list with added "plain_position" key for each tag.
+        """
+        mapping = self._build_index_mapping(original_text)
+        for tag in tags:
+            tag_type = tag.get("tag_type")
+            position = tag.get("position")
+            if not tag_type or position is None or position >= len(original_text):
+                tag["plain_position"] = None
+                continue
+            # Find content_start: after the first '>' from position
+            start_search = original_text.find('>', position)
+            if start_search == -1:
+                tag["plain_position"] = None
+                continue
+            content_start = start_search + 1
+            # Find raw_content_end: position of '<' in "</{tag_type}>"
+            closing_tag = f"</{tag_type}>"
+            end_search = original_text.find(closing_tag, content_start)
+            if end_search == -1:
+                tag["plain_position"] = None
+                continue
+            raw_content_end = end_search
+            raw_content = original_text[content_start:raw_content_end]
+            leading_ws = len(raw_content) - len(raw_content.lstrip())
+            adjusted_content_start = content_start + leading_ws
+            if adjusted_content_start < len(mapping):
+                tag["plain_position"] = mapping[adjusted_content_start]
+            else:
+                tag["plain_position"] = None
+        return tags
+
+    def _build_index_mapping(self, original_text: str) -> List[int]:
+        """
+        Builds a mapping from original_text indices to plain_text indices.
+
+        Returns a list where index i contains the plain_text index for original_text[i],
+        or -1 if original_text[i] is part of markup.
+        """
+        mapping = [-1] * len(original_text)
+        plain_idx = 0
+        i = 0
+        while i < len(original_text):
+            if original_text[i] == '<':
+                # Find the end of the tag
+                end = original_text.find('>', i)
+                if end != -1:
+                    i = end + 1  # Skip the entire tag
+                else:
+                    i += 1  # Malformed, skip char
+            else:
+                mapping[i] = plain_idx
+                plain_idx += 1
+                i += 1
+        return mapping
+
     def remove_ids_from_tags(self, text: str) -> str:
         """
         Removes ID and IDREF attributes from all tags in the given text.

@@ -47,10 +47,11 @@ class ProjectConfigurationManager:
                 attributes = template.get("attributes", {})
 
                 id_prefixes[tag_type] = template.get("id_prefix", "")
-                id_names[tag_type] = next(
-                    (attr for attr, details in attributes.items()
-                     if details.get("type") == "ID"), ""
-                )
+                id_names[tag_type] = id_prefixes[tag_type] + "id"
+                # id_names[tag_type] = next(
+                #     (attr for attr, details in attributes.items()
+                #      if details.get("type") == "ID"), ""
+                # )
                 id_ref_attributes[tag_type] = [
                     attr for attr, details in attributes.items()
                     if details.get("type") in {"ID", "IDREF"}

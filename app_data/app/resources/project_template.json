@@ -50,24 +50,55 @@
         "directories": {
             "<project>": {
                 "directories": {
-                    "annotation": {
-                        "directories": {},
+                    "documents": {
+                        "directories": {
+                            "annotation": {
+                                "directories": {},
+                                "files": []
+                            },
+                            "comparison": {
+                                "directories": {},
+                                "files": []
+                            },
+                            "extraction": {
+                                "directories": {},
+                                "files": []
+                            }
+                        },
                         "files": []
                     },
-                    "comparison": {
-                        "directories": {},
-                        "files": []
-                    },
-                    "extraction": {
-                        "directories": {},
-                        "files": []
-                    },
-                    "merged_document": {
-                        "directories": {},
+                    "export": {
+                        "directories": {
+                            "annotation": {
+                                "directories": {
+                                    "v1": {
+                                        "directories": {},
+                                        "files": []
+                                    },
+                                    "v2": {
+                                        "directories": {},
+                                        "files": []
+                                    }
+                                },
+                                "files": []
+                            },
+                            "comparison": {
+                                "directories": {
+                                    "v1": {
+                                        "directories": {},
+                                        "files": []
+                                    },
+                                    "v2": {
+                                        "directories": {},
+                                        "files": []
+                                    }
+                                },
+                                "files": []
+                            }
+                        },
                         "files": []
                     }
-                },
-                "files": []
+                }
             }
         }
     }

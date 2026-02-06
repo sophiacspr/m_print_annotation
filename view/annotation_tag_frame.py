@@ -296,8 +296,6 @@ class AnnotationTagFrame(tk.Frame):
             "position": position,
             "text": selected_text,
             "references": references,
-            "equivalent_uuids": [],
-            "uuid:": None
         }
 
         return tag_data
