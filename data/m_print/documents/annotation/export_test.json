@@ -8,15 +8,31 @@
         {
             "tag_type": "VOCAB",
             "attributes": {
-                "id": "v1"
+                "id": "v1",
+                "lemma": "adi",
+                "root_id": "v1"
             },
-            "position": 28,
-            "text": "consectetur",
+            "position": 40,
+            "text": "adipiscing",
+            "references": {},
             "id_name": "vid",
-            "references": {
-                "id": "v1"
+            "uuid": "f0ca1051-0e81-4302-8791-134ad61c617e",
+            "plain_position": 40
+        },
+        {
+            "tag_type": "VOCAB",
+            "attributes": {
+                "id": "v2",
+                "root_id": "v1"
             },
-            "plain_position": 28
+            "position": 327,
+            "text": "vulputate",
+            "references": {
+                "root_id": "f0ca1051-0e81-4302-8791-134ad61c617e"
+            },
+            "id_name": "vid",
+            "uuid": "c1784d1e-0187-423e-a30f-2d021c5a8946",
+            "plain_position": 278
         }
     ],
     "schema_version": 2

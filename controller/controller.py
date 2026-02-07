@@ -85,7 +85,8 @@ class Controller(IController):
         self._pdf_extraction_manager = PDFExtractionManager(controller=self)
         self._document_manager = DocumentManager(
             file_handler=self._file_handler,
-            tag_processor=self._tag_processor
+            tag_processor=self._tag_processor,
+            tag_manager=self._tag_manager
         )
 
         self._search_manager = SearchManager(file_handler=self._file_handler)
@@ -1347,16 +1348,9 @@ class Controller(IController):
         if export_format == ExportFormat.INLINE:
             document.pop("tags", None)
         elif export_format == ExportFormat.SPLIT:
-            print(f"DEBUG split start")
-            from pprint import pprint
-            print(f"DEBUG before")
-            pprint([str(tag) for tag in document["tags"]])
-            tags=[tag.get_tag_data() for tag in document["tags"]]
+            tags=[tag.to_dict() for tag in document["tags"]]
             # tags=self._tag_manager.get_all_tags_data(target_model=source_model)
             document=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
-            print(f"DEBUG after")
-            pprint([tag for tag in document["tags"]])
-            print(f"DEBUG split end")
         self._file_handler.write_file(path_key, document,f"{file_name}.json")
     
     def check_for_saving(self, enforce_check: bool = False) -> None:

@@ -1,18 +1,20 @@
 from input_output.interfaces import IFileHandler
 from model.tag_model import TagModel
-from utils.interfaces import ITagProcessor
+from utils.interfaces import ITagProcessor, ITagManager
 
 
 class DocumentManager():
-    def __init__(self,file_handler:IFileHandler,tag_processor:ITagProcessor)-> None:
+    def __init__(self, file_handler: IFileHandler, tag_processor: ITagProcessor, tag_manager: ITagManager) -> None:
         """
-        Initializes the DocumentManager with a FileHandler and TagProcessor instance.
+        Initializes the DocumentManager with a FileHandler, TagProcessor, and TagManager instance.
         Args:
             file_handler (IFileHandler): Used to read and write document files.
             tag_processor (ITagProcessor): Used to process tags within document text.
+            tag_manager (ITagManager): Used to manage tags and resolve references.
         """
         self._file_handler = file_handler
         self._tag_processor = tag_processor
+        self._tag_manager = tag_manager
 
     def save_document(self,file_path:str, document:dict, view_id:str)-> bool:
         """
@@ -28,9 +30,17 @@ class DocumentManager():
         if not view_id == "comparison":
             if "text" in document:
                 inline_text=document.pop("text")
-                plain_tags_and_tags=self._tag_processor.get_plain_text_and_tags(inline_text)
-                document["plain_text"]=plain_tags_and_tags["plain_text"]
-                document["tags"]=plain_tags_and_tags["tags"]
+                tags=[tag.to_dict() for tag in document.pop("tags",[])]
+                plain_text_and_tags=self._tag_processor.get_plain_text_and_tags(inline_text,tags)
+                plain_text=plain_text_and_tags["plain_text"]
+                tags=plain_text_and_tags["tags"]
+                from pprint import pprint
+                print(f"DEBUG tags after processing:")
+                print(type(tags))
+                for tag in tags:
+                    tag["references"]={key:tag.get_uuid() for key,tag in tag.get("references", {}).items()}
+                document["plain_text"]=plain_text
+                document["tags"]=tags 
             elif "plain_text" not in document or "tags" not in document:
                 raise ValueError(
                     "Document must contain either 'text' or both 'plain_text' and 'tags' for saving.")
@@ -110,7 +120,18 @@ class DocumentManager():
         document["file_path"] = file_path
 
         transformed_document_data = self._transform_document_to_internal_schema(document)
+        tags=document.get("tags",[])
+        for tag in tags:
+            resolved_refs = {}
+            for reference_key, reference_value in tag.get("references", {}).items():
+                for tag in tags:
+                    if tag.get("uuid","") == reference_value:
+                        resolved_refs[reference_key] = tag.get("id","")
+                        break
+            tag["references"] = resolved_refs
 
+        document["tags"]=tags     
+        
         if document.get("schema_version", 1) >= 2:
             document_data = self._add_tags_to_loaded_document(transformed_document_data,document)
         else:
@@ -233,6 +254,10 @@ class DocumentManager():
                 document_text = new_document_data["document"]["text"]
                 tags = self._tag_processor._extract_tags_from_text(document_text)
             new_document_data["tags"] = [TagModel(tag) for tag in tags]
+            # Resolve references to objects and set counters
+            for tag in new_document_data["tags"]:
+                resolved_refs = self._tag_manager._resolve_references(tag.get_references(), new_document_data["document"])
+                tag.set_references(resolved_refs)
         elif new_document_data["document"].get("document_type") == "comparison":
             if old_document_data: #schema >=2
                 merged_document_tags = old_document_data.get("merged_document_data", {}).get("tags", [])
@@ -250,7 +275,16 @@ class DocumentManager():
                         comparison_tags_group.append(tags)
                     comparison_tags.append(comparison_tags_group)
             new_document_data["document"]["merged_document_data"]["tags"] = [TagModel(tag) for tag in merged_document_tags]
+            # Resolve references for merged document
+            for tag in new_document_data["document"]["merged_document_data"]["tags"]:
+                resolved_refs = self._tag_manager._resolve_references(tag.get_references(), new_document_data["document"]["merged_document_data"])
+                tag.set_references(resolved_refs)
             new_document_data["comparison_tags"] = [[TagModel(tag) for tag in tag_group] for tag_group in comparison_tags]
+            # Resolve references for comparison tags
+            for group in new_document_data["comparison_tags"]:
+                for tag in group:
+                    resolved_refs = self._tag_manager._resolve_references(tag.get_references(), new_document_data["document"])
+                    tag.set_references(resolved_refs)
         return new_document_data
         
 

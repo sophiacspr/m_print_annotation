@@ -1,6 +1,15 @@
-language flags
+problem beim load
+_add_tags_to_loaded_document im documentmanager will references resolven. das geht aber nur, wenn schon die referenzierten tagmodels existieren. die existieren aber nicht zwingend. die tagmanager methode resolve references erwartet sogar ein komplettes document model, auf dem es operieren kann. das kann aber nciht geändert werden, wiel an anderen stellen darauf zugegriffen wird. 
 
 
+
+
+uuid wurde nicht mit gespeichert (funktioneirt nur im export import kanal, aber nciht im save kanal)
+references zeigen auf str und nciht objekt
+    problem im programm bei tag löschen und tag referenzieren
+reference muss aber in der ausgabe id oder uuid sein 
+
+load from md
 
 
 
