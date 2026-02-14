@@ -1274,10 +1274,10 @@ class Controller(IController):
 
 
         if self._active_view_id == "annotation":
-            if len(documents) != 1:
+            if len(document_data) != 1:
                 raise ValueError(
                     "Too many files selected: Only one file path is allowed when loading a predefined annotation model.")
-            self._annotation_document_model.set_document(documents[0])
+            self._annotation_document_model.set_document(document_data[0]["document"])
             self._annotation_document_model.set_tags(document_data[0]["tags"])
 
         # Load stored comparison_model or set up a new one from multiple documents

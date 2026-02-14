@@ -97,7 +97,7 @@ class TagManager:
 
         # Set references to the referred objects
         tag_data["references"] = self._resolve_references(
-            references=tag_data["references"], target_model=target_model)
+            references=tag_data["references"], tags=target_model.get_tags())
 
         new_tag = TagModel(tag_data)
         tags = target_model.get_tags()
@@ -278,47 +278,105 @@ class TagManager:
                 tag.set_position(tag_position + offset)
         target_model.set_tags(tags)
 
-    def _resolve_references(self, references: Dict[str, Union[str, ITagModel]], target_model: IDocumentModel) -> Dict[str, ITagModel]:
+    def normalize_references(self, tags:list[ITagModel])->list[ITagModel]:
+        """
+        Normalizes reference attributes in a list of tags by replacing tag IDs with their corresponding UUIDs.
+        Args:
+            tags (list[ITagModel]): A list of tags that may contain reference attributes with tag IDs.
+        Returns:
+            list[ITagModel]: A list of tags with normalized reference attributes, where tag IDs are replaced with their corresponding UUIDs.
+        """
+        for tag in tags:
+            if references := tag.get_references():
+                for attribute_name, reference_id in references.items():
+                    for potential_reference_tag in tags:
+                        if potential_reference_tag.get_id() == reference_id:
+                            references[attribute_name] = potential_reference_tag.get_uuid()
+                            break
+        return tags
+    
+    def resolve_all_references(self, tags: list[ITagModel]) -> list[ITagModel]:
+        """
+        Resolves all references for a list of tags, including nested references.
+        Args:
+            tags (list[ITagModel]): A list of tags that may contain reference attributes.
+        Returns:
+            list[ITagModel]: A list of tags with all references resolved, including nested references
+        """
+        resolved_tags = []
+        for tag in tags:
+            if references := tag.get_references():
+                resolved_references = self._resolve_references(
+                    references=references, tags=tags)
+                tag.set_references(resolved_references)
+            resolved_tags.append(tag)
+        return resolved_tags
+    
+    def _resolve_references(self, references: Dict[str, str], tags: list[ITagModel]) -> Dict[str, ITagModel]:
         """
         Resolves reference values in the `references` dictionary by linking them to actual TagModel objects.
-
-        - If the reference values are strings, they are resolved by matching against tag IDs.
-        - If the reference values are TagModel instances, they are assumed to come from another document.
-        In this case, the method searches for a tag in the target model whose UUID is listed among the
-        equivalent UUIDs of the reference tag. If no such tag is found, the reference is considered
-        unresolved and the tag is registered in the ComparisonModel for later resolution.
-
         Args:
-            references (Dict[str, Union[str, ITagModel]]): A dictionary mapping attribute names to either tag IDs or TagModel objects.
-            target_model (IDocumentModel): The document model in which references should be resolved.
-
+            references (Dict[str, str]): A dictionary mapping attribute names to tag IDs.
+            tags (list[ITagModel]): A list of TagModel objects to search for matching IDs.
         Returns:
             Dict[str, ITagModel]: A dictionary with resolved references (attribute name to TagModel).
+        Raises:
+            ValueError: If any reference with a given ID cannot be resolved to a TagModel in the provided list.
         """
-        tags = target_model.get_tags()
         resolved_references = {}
-
-        for key, ref in references.items():
-            if isinstance(ref, str):
-                for tag in tags:
-                    if tag.get_id() == ref:
-                        resolved_references[key] = tag
-                        tag.increment_reference_count()
-                        break
-            else:
-                raise NotImplementedError("Reference resolving from external TagModel is not implemented yet.")
-                # found = False
-                # for tag in tags:
-                #     if tag.get_uuid() in ref.get_equivalent_uuids():
-                #         resolved_references[key] = tag
-                #         tag.increment_reference_count()
-                #         found = True
-                #         break
-                # if not found:
-                #     self._comparison_model.add_unresolved_reference(ref)
-                #     resolved_references[key] = ref
-
+        for key, ref_uuid in references.items():
+            reference_unresolved = True
+            for tag in tags:
+                if tag.get_uuid() == ref_uuid:
+                    resolved_references[key] = tag
+                    tag.increment_reference_count()
+                    reference_unresolved = False
+                    break
+            if reference_unresolved:
+                raise ValueError(f"Reference with UUID {ref_uuid} could not be resolved.")
         return resolved_references
+
+    # def _resolve_references(self, references: Dict[str, Union[str, ITagModel]], target_model: IDocumentModel) -> Dict[str, ITagModel]:
+    #     """
+    #     Resolves reference values in the `references` dictionary by linking them to actual TagModel objects.
+
+    #     - If the reference values are strings, they are resolved by matching against tag IDs.
+    #     - If the reference values are TagModel instances, they are assumed to come from another document.
+    #     In this case, the method searches for a tag in the target model whose UUID is listed among the
+    #     equivalent UUIDs of the reference tag. If no such tag is found, the reference is considered
+    #     unresolved and the tag is registered in the ComparisonModel for later resolution.
+
+    #     Args:
+    #         references (Dict[str, Union[str, ITagModel]]): A dictionary mapping attribute names to either tag IDs or TagModel objects.
+    #         target_model (IDocumentModel): The document model in which references should be resolved.
+
+    #     Returns:
+    #         Dict[str, ITagModel]: A dictionary with resolved references (attribute name to TagModel).
+    #     """
+    #     tags = target_model.get_tags()
+    #     resolved_references = {}
+
+    #     for key, ref in references.items():
+    #         if isinstance(ref, str):
+    #             for tag in tags:
+    #                 if tag.get_id() == ref:
+    #                     resolved_references[key] = tag
+    #                     tag.increment_reference_count()
+    #                     break
+    #         else:
+    #             raise NotImplementedError("Reference resolving from external TagModel is not implemented yet.")
+    #             # found = False
+    #             # for tag in tags:
+    #             #     if tag.get_uuid() in ref.get_equivalent_uuids():
+    #             #         resolved_references[key] = tag
+    #             #         tag.increment_reference_count()
+    #             #         found = True
+    #             #         break
+    #             # if not found:
+    #             #     self._comparison_model.add_unresolved_reference(ref)
+    #             #     resolved_references[key] = ref
+
+    #     return resolved_references
 
     def is_deletion_prohibited(self, uuid: str, target_model: IDocumentModel) -> bool:
         """
@@ -441,7 +499,7 @@ class TagManager:
 
         target_model.set_meta_tags(meta_tags)
 
-    # TODO Complete reference resolving
+    # TODO check if reference resolving is complete and correct
     def insert_sentence(self, sentence: str, global_index: int, target_model: IDocumentModel) -> None:
         """
         Inserts a tagged sentence into the document model at the specified global index.
@@ -470,8 +528,8 @@ class TagManager:
         for tag_data in extracted_tag_data:
             tag_data["position"] += offset
             tag_data["uuid"] = self._generate_unique_id()
-            tag_data["references"] = self._resolve_references(
-                tag_data.get("references", {}), target_model)
+            tag_data["references"] = self._resolve_references(references=
+                tag_data.get("references", {}), tags=target_model.get_tags())
             self.add_tag(tag_data=tag_data, target_model=target_model)
 
   
