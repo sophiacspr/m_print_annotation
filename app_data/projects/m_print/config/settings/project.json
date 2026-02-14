@@ -18,9 +18,9 @@
             "database": {}
         }
     },
-    "current_group_file": "m_print_groups.json",
+    "current_group_file": "book_annotation.json",
     "group_files": [
-        "m_print_groups.json"
+        "book_annotation.json"
     ],
     "search_normalization": "search_normalization_rules.json",
     "color_scheme": "magma_comp_search_color_scheme.json",
