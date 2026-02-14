@@ -63,7 +63,7 @@ class TagModel(ITagModel):
         Returns:
             bool: True if the tag has incoming references and cannot be deleted, False otherwise.
         """
-        return self._incoming_references_count > 0
+        return self._incoming_references_count > 1 # 1 because the tag itself counts as a reference
 
     def get_uuid(self) -> str:
         """
