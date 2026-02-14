@@ -24,7 +24,7 @@ class MainWindow(tk.Tk, IObserver):
     def __init__(self, controller: IController) -> None:
         super().__init__()
 
-        self.DEFAULT_NOTEBOOK_INDEX = 0
+        self.DEFAULT_NOTEBOOK_INDEX = 1 # Default to the annotation view
         self._controller = controller
         self._controller.register_view("main_window", self)
 
