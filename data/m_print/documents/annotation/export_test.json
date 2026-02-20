@@ -4,36 +4,6 @@
     "file_name": "export_test",
     "meta_tags": {},
     "plain_text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum vestibulum. Cras venenatis euismod malesuada. \n\nNullam ac erat ante. Sed vel lacus id magna lacinia sagittis. \n\nPraesent euismod, nunc vel congue cursus, massa quam dapibus leo, eget vulputate orci purus ut lorem.",
-    "tags": [
-        {
-            "tag_type": "VOCAB",
-            "attributes": {
-                "id": "v1",
-                "lemma": "adi",
-                "root_id": "v1"
-            },
-            "position": 40,
-            "text": "adipiscing",
-            "references": {},
-            "id_name": "vid",
-            "uuid": "f0ca1051-0e81-4302-8791-134ad61c617e",
-            "plain_position": 40
-        },
-        {
-            "tag_type": "VOCAB",
-            "attributes": {
-                "id": "v2",
-                "root_id": "v1"
-            },
-            "position": 327,
-            "text": "vulputate",
-            "references": {
-                "root_id": "f0ca1051-0e81-4302-8791-134ad61c617e"
-            },
-            "id_name": "vid",
-            "uuid": "c1784d1e-0187-423e-a30f-2d021c5a8946",
-            "plain_position": 278
-        }
-    ],
+    "tags": [],
     "schema_version": 2
 }

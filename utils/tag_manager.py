@@ -96,8 +96,10 @@ class TagManager:
         tag_data.setdefault("uuid", self._generate_unique_id())
 
         # Set references to the referred objects
+        references=tag_data.get("references", {})
+        normalized_references = self._normalize_references(references, target_model.get_tags())
         tag_data["references"] = self._resolve_references(
-            references=tag_data["references"], tags=target_model.get_tags())
+            references=normalized_references, tags=target_model.get_tags())
 
         new_tag = TagModel(tag_data)
         tags = target_model.get_tags()
@@ -278,6 +280,31 @@ class TagManager:
                 tag.set_position(tag_position + offset)
         target_model.set_tags(tags)
 
+    def _normalize_references(self, references: Dict[str, str], tags: list[ITagModel]) -> Dict[str, str]:
+        """
+        Normalizes reference attributes by replacing tag IDs with their corresponding UUIDs.
+
+        This method iterates through the provided references and matches each reference ID 
+        against the list of tags to find the corresponding UUID. The normalized references 
+        are returned as a new dictionary.
+
+        Args:
+            references (Dict[str, str]): A dictionary mapping attribute names to tag IDs.
+            tags (list[ITagModel]): A list of tags to search for matching IDs.
+
+        Returns:
+            Dict[str, str]: A dictionary with normalized references (attribute name to UUID).
+        """
+        normalized_references = {}
+        for attribute_name, reference_id in references.items():
+            for potential_reference_tag in tags:
+                if potential_reference_tag.get_id() == reference_id:
+                    normalized_references[attribute_name] = potential_reference_tag.get_uuid()
+                    break
+            else:
+                normalized_references[attribute_name] = reference_id  # Keep original ID if no match found
+        return normalized_references
+
     def normalize_references(self, tags:list[ITagModel])->list[ITagModel]:
         """
         Normalizes reference attributes in a list of tags by replacing tag IDs with their corresponding UUIDs.
@@ -288,11 +315,8 @@ class TagManager:
         """
         for tag in tags:
             if references := tag.get_references():
-                for attribute_name, reference_id in references.items():
-                    for potential_reference_tag in tags:
-                        if potential_reference_tag.get_id() == reference_id:
-                            references[attribute_name] = potential_reference_tag.get_uuid()
-                            break
+                normalized_references = self._normalize_references(references, tags)
+                tag.set_references(normalized_references)
         return tags
     
     def resolve_all_references(self, tags: list[ITagModel]) -> list[ITagModel]:
@@ -327,6 +351,8 @@ class TagManager:
         for key, ref_uuid in references.items():
             reference_unresolved = True
             for tag in tags:
+                print(f"DEBUG {ref_uuid=}")
+                print(f"DEBUG {tag.get_uuid()=}")
                 if tag.get_uuid() == ref_uuid:
                     resolved_references[key] = tag
                     tag.increment_reference_count()
