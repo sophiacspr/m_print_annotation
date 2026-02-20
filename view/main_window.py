@@ -55,9 +55,9 @@ class MainWindow(tk.Tk, IObserver):
         # Create File, Project, Settings, and Help menus
         # File menu
         file_menu = tk.Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="Open File", command=self._on_open)
-        file_menu.add_command(label="Save File", command=self._on_save)
-        file_menu.add_command(label="Save as...", command=self._on_save_as)
+        file_menu.add_command(label="Open File", command=self._on_open,accelerator="Ctrl+o")
+        file_menu.add_command(label="Save File", command=self._on_save, accelerator="Ctrl+s")
+        file_menu.add_command(label="Save as...", command=self._on_save_as, accelerator="Ctrl+Shift+s")
         export_menu = tk.Menu(file_menu, tearoff=0)
         export_menu.add_command(label="Inline tags", command=self._on_export_inline_tags)
         export_menu.add_command(label="Tag list/ Plain text", command=self._on_export_tag_list_plain_text)
