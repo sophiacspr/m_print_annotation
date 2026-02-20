@@ -38,6 +38,7 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
 
         # Dictionary of tag frames keyed by tag type
         self._tag_frames: Dict[str, AnnotationTagFrame] = {}
+        self._tag_frames_list: List[AnnotationTagFrame] = []
 
         self._root_view_id = root_view_id
         # Flag to indicate if initial layout is already rendered
@@ -102,7 +103,7 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
                 template=template,
                 root_view_id=self._root_view_id
             )
-
+            self._tag_frames_list.append(tag_frame)
             tag_frame.pack(fill="x", padx=5, pady=5, anchor="n", expand=True)
             self._tag_frames[tag_frame.get_name()] = tag_frame
 
@@ -185,3 +186,12 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
         """
         self._controller.add_observer(self)
         self._observers_registered = True
+
+    def trigger_add_tag(self, tag_type_index: int) -> None:
+        """
+        Triggers the add tag action for the specified tag type index.
+        This method is called by the shortcut handlers to add a tag of the corresponding type.
+        Args:
+            tag_type_index (int): The index of the tag type to add (0-based).
+        """
+        self._tag_frames_list[tag_type_index].trigger_add_tag()

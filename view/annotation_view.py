@@ -33,33 +33,67 @@ class AnnotationView(View):
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
         # Left frame with another vertical PanedWindow
-        self.left_paned = ttk.PanedWindow(
+        self._left_paned = ttk.PanedWindow(
             self.paned_window, orient=tk.VERTICAL)
 
         # Upper frame for meta tags
         self.upper_frame = MetaTagsFrame(
-            self.left_paned, controller=self._controller)
+            self._left_paned, controller=self._controller)
 
         # Lower frame for text annotation display
         self.lower_frame = AnnotationTextDisplayFrame(
-            self.left_paned, controller=self._controller, is_static_observer=True)
+            self._left_paned, controller=self._controller, is_static_observer=True)
 
         # Add both frames to the vertical PanedWindow inside left_frame
         # MetaTagsFrame gets less space
-        self.left_paned.add(self.upper_frame, weight=0)
+        self._left_paned.add(self.upper_frame, weight=0)
         # AnnotationTextDisplayFrame gets more space
-        self.left_paned.add(self.lower_frame, weight=4)
+        self._left_paned.add(self.lower_frame, weight=4)
         # SearchFrame gets a small space at the bottom
-        wrapper = ttk.Frame(self.left_paned, padding=(10, 5))  # (padx, pady)
+        wrapper = ttk.Frame(self._left_paned, padding=(10, 5))  # (padx, pady)
         self.search_frame = SearchFrame(
             wrapper, controller=self._controller, root_view_id=self._view_id)
         self.search_frame.pack(fill="both", expand=True)
-        self.left_paned.add(wrapper, weight=0)
+        self._left_paned.add(wrapper, weight=0)
 
         # Right frame for the tagging menu
-        self.right_frame = AnnotationMenuFrame(
+        self._right_frame = AnnotationMenuFrame(
             self, controller=self._controller, root_view_id=self._view_id)
 
         # Add the left PanedWindow and the right frame to the main PanedWindow
-        self.paned_window.add(self.left_paned, weight=6)
-        self.paned_window.add(self.right_frame, weight=1)
+        self.paned_window.add(self._left_paned, weight=6)
+        self.paned_window.add(self._right_frame, weight=1)
+
+    def enable_shortcuts(self) -> None:
+        """
+        Enables Ctrl+1..4 shortcuts for adding tag types.
+        """
+        self.bind_all("<Control-Key-1>", self._on_shortcut_tag_1)
+        self.bind_all("<Control-Key-2>", self._on_shortcut_tag_2)
+        self.bind_all("<Control-Key-3>", self._on_shortcut_tag_3)
+        self.bind_all("<Control-Key-4>", self._on_shortcut_tag_4)
+
+
+    def disable_shortcuts(self) -> None:
+        """
+        Disables Ctrl+1..4 shortcuts for adding tag types.
+        """
+        self.unbind_all("<Control-Key-1>")
+        self.unbind_all("<Control-Key-2>")
+        self.unbind_all("<Control-Key-3>")
+        self.unbind_all("<Control-Key-4>")
+
+
+    # --- Shortcut handlers ---
+
+    def _on_shortcut_tag_1(self, event=None) -> None:
+        self._right_frame.trigger_add_tag(0)
+
+    def _on_shortcut_tag_2(self, event=None) -> None:
+        self._right_frame.trigger_add_tag(1)
+
+    def _on_shortcut_tag_3(self, event=None) -> None:
+        self._right_frame.trigger_add_tag(2)
+
+    def _on_shortcut_tag_4(self, event=None) -> None:
+        self._right_frame.trigger_add_tag(3)

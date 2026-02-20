@@ -46,6 +46,7 @@ class MainWindow(tk.Tk, IObserver):
         self._render_views()
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
         self._controller.add_observer(self)
+        self._bind_global_shortcuts()
 
     def _create_menu(self) -> None:
         menu_bar = tk.Menu(self)
@@ -127,6 +128,37 @@ class MainWindow(tk.Tk, IObserver):
         self._notebook.select(self.DEFAULT_NOTEBOOK_INDEX)
         self._controller.set_active_view(
             ["extraction", "annotation", "comparison"][self.DEFAULT_NOTEBOOK_INDEX])
+        self._notebook.bind("<<NotebookTabChanged>>", self._on_notebook_tab_changed)
+        self.after_idle(self._update_mode_shortcuts)
+
+    def _on_notebook_tab_changed(self, event=None) -> None:
+        self._update_mode_shortcuts()
+
+    # --- NEW: mode shortcut switching via controller active view ---
+    def _update_mode_shortcuts(self) -> None:
+        active_view = self._controller.get_active_view()  # "annotation" | "extraction" | "comparison"
+
+        if active_view == "annotation":
+            print(f"DEBUG - Active view: {active_view}. Enabling annotation shortcuts, disabling others.")
+            self._annotation_view.enable_shortcuts()
+            self._extraction_view.disable_shortcuts()
+            self._comparison_view.disable_shortcuts()
+        elif active_view == "extraction":
+            print(f"DEBUG - Active view: {active_view}. Enabling extraction shortcuts, disabling others.")
+            self._extraction_view.enable_shortcuts()
+            self._annotation_view.disable_shortcuts()
+            self._comparison_view.disable_shortcuts()
+        elif active_view == "comparison":
+            print(f"DEBUG - Active view: {active_view}. Enabling comparison shortcuts, disabling others.")
+            self._comparison_view.enable_shortcuts()
+            self._annotation_view.disable_shortcuts()
+            self._extraction_view.disable_shortcuts()
+        else:
+            # fail-safe: disable all mode shortcuts
+            print(f"DEBUG - Active view: {active_view}. Unrecognized view, disabling all mode shortcuts.")
+            self._annotation_view.disable_shortcuts()
+            self._extraction_view.disable_shortcuts()
+            self._comparison_view.disable_shortcuts()
 
     def _destroy_views(self) -> None:
         """
@@ -137,6 +169,15 @@ class MainWindow(tk.Tk, IObserver):
         self._extraction_view = None
         self._annotation_view = None
         self._comparison_view = None
+
+    def _bind_global_shortcuts(self) -> None:
+        """
+        Binds keyboard shortcuts for common actions.
+        """
+        self.bind_all("<Control-s>", lambda event: self._on_save())
+        self.bind_all("<Control-o>", lambda event: self._on_open())
+        self.bind_all("<Control-Shift-s>", lambda event:self._on_save_as)
+
 
     def reload_views_for_new_project(self) -> None:
         """

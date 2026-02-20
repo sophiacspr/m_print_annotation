@@ -87,3 +87,16 @@ class ComparisonView(View, IComparisonView):
             List[tk.Widget]: A list of widgets representing the text displays.
         """
         return self._text_displays.get_displays()
+
+    def enable_shortcuts(self) -> None:
+        """
+        Enables shortcuts.
+        """
+        pass
+
+
+    def disable_shortcuts(self) -> None:
+        """
+        Disables shortcuts.
+        """
+        pass

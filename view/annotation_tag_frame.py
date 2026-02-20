@@ -299,6 +299,14 @@ class AnnotationTagFrame(tk.Frame):
         }
 
         return tag_data
+    
+    def trigger_add_tag(self) -> None:
+        """
+        Triggers the add tag action for this tag frame.
+
+        This method is called by the shortcut handlers to add a tag of this tag frame's type.
+        """
+        self._on_button_pressed_add_tag()
 
     def get_name(self) -> str:
         """

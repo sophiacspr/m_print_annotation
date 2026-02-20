@@ -65,3 +65,16 @@ class ExtractionView(View):
 
         # Set initial sash positions
         self.old_sash = self.paned_window.sashpos(0)
+
+    def enable_shortcuts(self) -> None:
+        """
+        Enables shortcuts.
+        """
+        pass
+
+
+    def disable_shortcuts(self) -> None:
+        """
+        Disables shortcuts.
+        """
+        pass
