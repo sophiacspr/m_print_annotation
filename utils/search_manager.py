@@ -1,4 +1,3 @@
-import pprint
 import re
 from typing import Dict, List
 from data_classes.search_result import SearchResult
@@ -192,7 +191,6 @@ class SearchManager:
             return search_model
 
         flags = 0 if options.get("case_sensitive") else re.IGNORECASE
-        print(f"DEBUG {term=}")
         if options.get("regex"):
             pattern = term
         else:
@@ -201,7 +199,6 @@ class SearchManager:
         if options.get("whole_word"):
             pattern = r'\b' + pattern + r'\b'
 
-        print(f"DEBUG ")
         for match in re.finditer(pattern, text, flags):
             result = SearchResult(
                 term=match.group(),
@@ -210,7 +207,6 @@ class SearchManager:
                 search_type=SearchType.MANUAL,
             )
             search_model.add_result(result)
-            pprint.pprint(result)
         search_model.validate()
         return search_model
 

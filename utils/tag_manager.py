@@ -351,8 +351,6 @@ class TagManager:
         for key, ref_uuid in references.items():
             reference_unresolved = True
             for tag in tags:
-                print(f"DEBUG {ref_uuid=}")
-                print(f"DEBUG {tag.get_uuid()=}")
                 if tag.get_uuid() == ref_uuid:
                     resolved_references[key] = tag
                     tag.increment_reference_count()

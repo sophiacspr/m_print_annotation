@@ -1,5 +1,4 @@
 from input_output.interfaces import IFileHandler
-from model.interfaces import ITagModel
 from model.tag_model import TagModel
 from utils.interfaces import ITagProcessor, ITagManager
 
@@ -35,9 +34,6 @@ class DocumentManager():
                 plain_text_and_tags=self._tag_processor.get_plain_text_and_tags(inline_text,tags)
                 plain_text=plain_text_and_tags["plain_text"]
                 tags=plain_text_and_tags["tags"]
-                from pprint import pprint
-                print(f"DEBUG tags after processing:")
-                print(type(tags))
                 for tag in tags:
                     tag["references"]={key:tag.get_uuid() for key,tag in tag.get("references", {}).items()}
                 document["plain_text"]=plain_text

@@ -1349,7 +1349,8 @@ class Controller(IController):
             document.pop("tags", None)
         elif export_format == ExportFormat.SPLIT:
             tags=[tag.to_dict() for tag in document["tags"]]
-            # tags=self._tag_manager.get_all_tags_data(target_model=source_model)
+            for tag in tags:
+                tag["references"] = {ref_type: referenced_tag.get_uuid() for ref_type, referenced_tag in tag.get("references", {}).items() if referenced_tag}
             document=self._tag_processor.get_plain_text_and_tags(text=document["text"],tags=tags)
         self._file_handler.write_file(path_key, document,f"{file_name}.json")
     

@@ -139,23 +139,19 @@ class MainWindow(tk.Tk, IObserver):
         active_view = self._controller.get_active_view()  # "annotation" | "extraction" | "comparison"
 
         if active_view == "annotation":
-            print(f"DEBUG - Active view: {active_view}. Enabling annotation shortcuts, disabling others.")
             self._annotation_view.enable_shortcuts()
             self._extraction_view.disable_shortcuts()
             self._comparison_view.disable_shortcuts()
         elif active_view == "extraction":
-            print(f"DEBUG - Active view: {active_view}. Enabling extraction shortcuts, disabling others.")
             self._extraction_view.enable_shortcuts()
             self._annotation_view.disable_shortcuts()
             self._comparison_view.disable_shortcuts()
         elif active_view == "comparison":
-            print(f"DEBUG - Active view: {active_view}. Enabling comparison shortcuts, disabling others.")
             self._comparison_view.enable_shortcuts()
             self._annotation_view.disable_shortcuts()
             self._extraction_view.disable_shortcuts()
         else:
             # fail-safe: disable all mode shortcuts
-            print(f"DEBUG - Active view: {active_view}. Unrecognized view, disabling all mode shortcuts.")
             self._annotation_view.disable_shortcuts()
             self._extraction_view.disable_shortcuts()
             self._comparison_view.disable_shortcuts()
