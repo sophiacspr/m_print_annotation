@@ -1,3 +1,50 @@
+-beim tag einfügen sprint text display wieder nach oben
+
+-nach dem speichern 
+Traceback (most recent call last):
+  File "C:\Users\tonig\AppData\Local\Programs\Python\Python311\Lib\tkinter\__init__.py", line 1948, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\tonig\m_print\m_print_annotation\view\annotation_view.py", line 90, in _on_shortcut_tag_1
+    self._right_frame.trigger_add_tag(0)
+  File "C:\Users\tonig\m_print\m_print_annotation\view\annotation_menu_frame.py", line 197, in trigger_add_tag
+    self._tag_frames_list[tag_type_index].trigger_add_tag()
+  File "C:\Users\tonig\m_print\m_print_annotation\view\annotation_tag_frame.py", line 309, in trigger_add_tag
+    self._on_button_pressed_add_tag()
+  File "C:\Users\tonig\m_print\m_print_annotation\view\annotation_tag_frame.py", line 233, in _on_button_pressed_add_tag
+    self._controller.perform_add_tag(
+  File "C:\Users\tonig\m_print\m_print_annotation\controller\controller.py", line 158, in wrapper
+    result = method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tonig\m_print\m_print_annotation\controller\controller.py", line 1127, in perform_add_tag
+    self._execute_command(command=command, caller_id=caller_id)
+  File "C:\Users\tonig\m_print\m_print_annotation\controller\controller.py", line 158, in wrapper
+    result = method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tonig\m_print\m_print_annotation\controller\controller.py", line 125, in wrapper
+    return method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tonig\m_print\m_print_annotation\controller\controller.py", line 135, in wrapper
+    result = method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tonig\m_print\m_print_annotation\controller\controller.py", line 195, in wrapped
+    result = method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tonig\m_print\m_print_annotation\controller\controller.py", line 265, in _execute_command
+    command.execute()
+  File "C:\Users\tonig\m_print\m_print_annotation\commands\add_tag_command.py", line 29, in execute
+    self._tag_uuid = self._tag_manager.add_tag(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tonig\m_print\m_print_annotation\utils\tag_manager.py", line 122, in add_tag
+    updated_text = self._update_ids(
+                   ^^^^^^^^^^^^^^^^^
+  File "C:\Users\tonig\m_print\m_print_annotation\utils\tag_manager.py", line 252, in _update_ids
+    new_ref_id = references[attribute_name].get_id()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get_id'
+
+
+
 problem beim load
 _add_tags_to_loaded_document im documentmanager will references resolven. das geht aber nur, wenn schon die referenzierten tagmodels existieren. die existieren aber nicht zwingend. die tagmanager methode resolve references erwartet sogar ein komplettes document model, auf dem es operieren kann. das kann aber nciht geändert werden, wiel an anderen stellen darauf zugegriffen wird. 
 
