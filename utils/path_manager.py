@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 
 class PathManager:
@@ -14,11 +14,14 @@ class PathManager:
         """
         Initializes the path manager by resolving the current project name
         and building the expanded path mapping.
-
         """
-        self._app_paths_file = "app_data/app/config/app_paths.json"
-        # initial load without project context to be able to read some files in init
-        self._paths: dict = self._load_project_independent_paths()
+        self._app_paths_file = os.path.normpath(
+            "app_data/app/config/app_paths.json"
+        )
+
+        # Initial load without project context to be able to read project-independent
+        # files before a project is selected.
+        self._paths: dict[str, str] = self._load_project_independent_paths()
 
     def get_last_project_name(self) -> str:
         """
@@ -31,32 +34,40 @@ class PathManager:
             FileNotFoundError: If the project root directory is missing.
             RuntimeError: If no projects are available.
         """
-        with open(self._app_paths_file, "r", encoding="utf-8") as f:
-            app_paths = json.load(f)
+        with open(self._app_paths_file, "r", encoding="utf-8") as file:
+            app_paths = json.load(file)
 
-        path_to_last_project = app_paths.get(
-            "last_project", "").strip()
+        raw_path_to_last_project = app_paths.get("last_project", "").strip()
 
-        if path_to_last_project and os.path.exists(path_to_last_project):
-            with open(path_to_last_project, "r", encoding="utf-8") as f:
-                last_project_config = json.load(f)
-                project_name = last_project_config.get(
-                    "last_project", "").strip()
+        if raw_path_to_last_project:
+            path_to_last_project = os.path.normpath(raw_path_to_last_project)
+
+            if os.path.isfile(path_to_last_project):
+                with open(path_to_last_project, "r", encoding="utf-8") as file:
+                    last_project_config = json.load(file)
+
+                project_name = last_project_config.get("last_project", "").strip()
+
                 if project_name:
                     return project_name
 
-        project_root = os.path.join("app_data", "project_directory")
+        project_root = os.path.normpath("app_data/project_directory")
+
         try:
             projects = [
-                name for name in os.listdir(project_root)
+                name
+                for name in os.listdir(project_root)
                 if os.path.isdir(os.path.join(project_root, name))
             ]
-        except FileNotFoundError:
+        except FileNotFoundError as exc:
             raise FileNotFoundError(
-                "Project directory 'app_data/projects' does not exist.")
+                "Project directory 'app_data/project_directory' does not exist."
+            ) from exc
 
         if not projects:
-            raise RuntimeError("No projects found in 'app_data/projects'.")
+            raise RuntimeError(
+                "No projects found in 'app_data/project_directory'."
+            )
 
         return projects[0]
 
@@ -67,8 +78,8 @@ class PathManager:
         Args:
             project_name (str): The new project to resolve paths for.
         """
-        with open(self._app_paths_file, "r", encoding="utf-8") as f:
-            raw_paths = json.load(f)
+        with open(self._app_paths_file, "r", encoding="utf-8") as file:
+            raw_paths = json.load(file)
 
         self._paths = {
             key: os.path.normpath(path.replace("<project>", project_name))
@@ -78,7 +89,7 @@ class PathManager:
     def resolve_path(self, key_or_path: str) -> str:
         """
         Resolves a configuration key to a full file path, or returns the path as-is
-        if it's already a real path.
+        if it is already a real path.
 
         Args:
             key_or_path (str): Key from config or already-resolved file path.
@@ -87,20 +98,27 @@ class PathManager:
             str: Fully resolved and normalized file path.
         """
         if key_or_path in self._paths:
-            return self._paths[key_or_path]
+            return os.path.normpath(self._paths[key_or_path])
+
         return os.path.normpath(key_or_path)
 
-    def _load_project_independent_paths(self) -> dict:
+    def _load_project_independent_paths(self) -> dict[str, str]:
         """
         Loads paths from app_paths.json without expanding <project>.
 
         This is used during initialization before any project is selected.
 
         Returns:
-            dict: Raw path templates from app_paths.json.
+            dict[str, str]: Normalized raw path templates from app_paths.json
+            that do not depend on a project placeholder.
         """
-        with open(self._app_paths_file, "r", encoding="utf-8") as f:
-            raw_paths = json.load(f)
+        with open(self._app_paths_file, "r", encoding="utf-8") as file:
+            raw_paths = json.load(file)
+
         project_independent_paths = {
-            key: path for key, path in raw_paths.items() if "<project>" not in path}
+            key: os.path.normpath(path)
+            for key, path in raw_paths.items()
+            if "<project>" not in path
+        }
+
         return project_independent_paths
