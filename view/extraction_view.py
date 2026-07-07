@@ -5,12 +5,13 @@ from view.meta_tags_frame import MetaTagsFrame
 from view.extraction_frame import ExtractionFrame
 from view.preview_text_display_frame import PreviewTextDisplayFrame
 from view.search_frame import SearchFrame
-from view.text_display_frame import TextDisplayFrame
-from view.annotation_menu_frame import AnnotationMenuFrame
-from view.view import View
+from view.view import ViewBehavior
+from view.interfaces import IView
 
 
-class ExtractionView(View):
+class ExtractionView(tk.Frame, IView):
+    observer_id: str = "extraction_view"
+
     def __init__(self, parent: tk.Widget, controller: IController) -> None:
         """
         Initializes the PDFExtractionView with a reference to the parent widget and controller.
@@ -19,18 +20,23 @@ class ExtractionView(View):
             parent (tk.Widget): The parent widget where this frame will be placed.
             controller (IController): The controller managing actions for this view.
         """
-        super().__init__(parent, controller)
+        super().__init__(parent)
 
-        self.observer_id: str = "extraction_view"
-
-        self._file_name = ""  # Initialize file name as an empty string
+        self._controller: IController = controller
+        self._file_name = ""
         self._view_id = "extraction"
+        self._view_behavior = ViewBehavior(
+            owner=self,
+            controller=self._controller,
+            view_id=self._view_id,
+            observer_id=self.observer_id,
+        )
         self._controller.register_view(self._view_id)
         self._render()
 
     def _render(self) -> None:
         """
-        Sets up the layout for the PDFExtractionView, allowing resizing between 
+        Sets up the layout for the PDFExtractionView, allowing resizing between
         the text display frames on the left, a center frame, and the tagging menu frame on the right.
         """
         # Create the main horizontal PanedWindow for the layout
@@ -75,12 +81,20 @@ class ExtractionView(View):
         """
         pass
 
-
     def disable_shortcuts(self) -> None:
         """
         Disables shortcuts.
         """
         pass
+
+    def get_view_id(self) -> str | None:
+        """
+        Returns the logical view identifier.
+
+        Returns:
+            str | None: The logical view identifier.
+        """
+        return self._view_behavior.get_view_id()
 
     def get_observer_id(self) -> str:
         """
@@ -89,4 +103,4 @@ class ExtractionView(View):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_behavior.get_observer_id()

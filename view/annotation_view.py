@@ -5,10 +5,13 @@ from view.annotation_text_display_frame import AnnotationTextDisplayFrame
 from view.meta_tags_frame import MetaTagsFrame
 from view.annotation_menu_frame import AnnotationMenuFrame
 from view.search_frame import SearchFrame
-from view.view import View
+from view.view import ViewBehavior
+from view.interfaces import IView
 
 
-class AnnotationView(View):
+class AnnotationView(tk.Frame, IView):
+    observer_id: str = "annotation_view"
+
     def __init__(self, parent: tk.Widget, controller: IController) -> None:
         """
         Initializes the AnnotationView with a reference to the parent widget and controller.
@@ -17,15 +20,22 @@ class AnnotationView(View):
             parent (tk.Widget): The parent widget where this frame will be placed.
             controller (IController): The controller managing actions for this view.
         """
-        super().__init__(parent, controller)
-        self.observer_id: str = "annotation_view"
+        super().__init__(parent)
+
+        self._controller: IController = controller
         self._view_id = "annotation"
+        self._view_behavior = ViewBehavior(
+            owner=self,
+            controller=self._controller,
+            view_id=self._view_id,
+            observer_id=self.observer_id,
+        )
         self._controller.register_view(self._view_id)
         self._render()
 
     def _render(self) -> None:
         """
-        Sets up the layout for the AnnotationView, allowing resizing between 
+        Sets up the layout for the AnnotationView, allowing resizing between
         the text display frames on the left, a center frame, and the tagging menu frame on the right.
         """
         # Create the main horizontal PanedWindow for the layout
@@ -51,7 +61,7 @@ class AnnotationView(View):
         # AnnotationTextDisplayFrame gets more space
         self._left_paned.add(self.lower_frame, weight=4)
         # SearchFrame gets a small space at the bottom
-        wrapper = ttk.Frame(self._left_paned, padding=(10, 5))  # (padx, pady)
+        wrapper = ttk.Frame(self._left_paned, padding=(10, 5))
         self.search_frame = SearchFrame(
             wrapper, controller=self._controller, root_view_id=self._view_id)
         self.search_frame.pack(fill="both", expand=True)
@@ -74,7 +84,6 @@ class AnnotationView(View):
         self.bind_all("<Control-Key-3>", self._on_shortcut_tag_3)
         self.bind_all("<Control-Key-4>", self._on_shortcut_tag_4)
 
-
     def disable_shortcuts(self) -> None:
         """
         Disables Ctrl+1..4 shortcuts for adding tag types.
@@ -83,7 +92,6 @@ class AnnotationView(View):
         self.unbind_all("<Control-Key-2>")
         self.unbind_all("<Control-Key-3>")
         self.unbind_all("<Control-Key-4>")
-
 
     # --- Shortcut handlers ---
 
@@ -99,6 +107,15 @@ class AnnotationView(View):
     def _on_shortcut_tag_4(self, event=None) -> None:
         self._right_frame.trigger_add_tag(3)
 
+    def get_view_id(self) -> str | None:
+        """
+        Returns the logical view identifier.
+
+        Returns:
+            str | None: The logical view identifier.
+        """
+        return self._view_behavior.get_view_id()
+
     def get_observer_id(self) -> str:
         """
         Returns the stable observer identifier used by the source mapping.
@@ -106,4 +123,4 @@ class AnnotationView(View):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_behavior.get_observer_id()

@@ -1,40 +1,52 @@
 from typing import List
-from controller.interfaces import IController
 import tkinter as tk
 from tkinter import ttk
 
+from controller.interfaces import IController
 from view.annotation_menu_frame import AnnotationMenuFrame
-# from view.comparison_io_frame import ComparisonIOFrame
-# from view.comparison_controls_frame import ComparisonControlsFrame
 from view.comparison_header_frame import ComparisonHeaderFrame
 from view.comparison_text_displays import ComparisonTextDisplays
 from view.interfaces import IComparisonView
 from view.search_frame import SearchFrame
-from view.view import View
+from view.view import ViewBehavior
 
 
-class ComparisonView(View, IComparisonView):
+class ComparisonView(tk.Frame, IComparisonView):
+    """
+    Top-level comparison view.
+
+    This class keeps the required Tkinter frame inheritance, but uses composition
+    for shared project-specific view behavior instead of inheriting from View.
+    """
+
+    observer_id: str = "comparison_view"
+
     def __init__(self, parent: tk.Widget, controller: IController) -> None:
         """
-        Initializes the TextAnnotationView with a reference to the parent widget and controller.
+        Initializes the ComparisonView with a reference to the parent widget and controller.
 
         Args:
             parent (tk.Widget): The parent widget where this frame will be placed.
             controller (IController): The controller managing actions for this view.
         """
-        super().__init__(parent, controller)
+        super().__init__(parent)
 
-        self.observer_id: str = "comparison_view"
+        self._controller: IController = controller
+        self._view_id: str = "comparison"
+        self._view_behavior = ViewBehavior(
+            owner=self,
+            controller=self._controller,
+            view_id=self._view_id,
+            observer_id=self.observer_id,
+        )
 
-        self._view_id = "comparison"
         self._controller.register_view(view_id=self._view_id, view=self)
-        self._text_displays = None
+        self._text_displays: ComparisonTextDisplays | None = None
         self._render()
 
-    def _render(self):
+    def _render(self) -> None:
         """
-        Sets up the layout for the ComparisonView, allowing resizing between 
-        the text display frames on the left, a center frame, and the tagging menu frame on the right.
+        Sets up the layout for the ComparisonView.
         """
         # Create the main horizontal PanedWindow for the layout
         self.paned_window = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
@@ -60,7 +72,6 @@ class ComparisonView(View, IComparisonView):
         self.export_button = tk.Button(
             self.export_frame,
             text="Export Merged Document",
-            # replace with your actual method
             command=self._controller.perform_export
         )
         self.export_button.pack(side=tk.LEFT)
@@ -83,12 +94,11 @@ class ComparisonView(View, IComparisonView):
         """
         Returns a list of all text display widgets managed by this view.
 
-        This method retrieves the text display widgets from `_text_displays` 
-        and provides them as a flat list.
-
         Returns:
             List[tk.Widget]: A list of widgets representing the text displays.
         """
+        if self._text_displays is None:
+            return []
         return self._text_displays.get_displays()
 
     def enable_shortcuts(self) -> None:
@@ -97,12 +107,20 @@ class ComparisonView(View, IComparisonView):
         """
         pass
 
-
     def disable_shortcuts(self) -> None:
         """
         Disables shortcuts.
         """
         pass
+
+    def get_view_id(self) -> str | None:
+        """
+        Returns the logical view identifier.
+
+        Returns:
+            str | None: The logical view identifier.
+        """
+        return self._view_behavior.get_view_id()
 
     def get_observer_id(self) -> str:
         """
@@ -111,4 +129,4 @@ class ComparisonView(View, IComparisonView):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_behavior.get_observer_id()
