@@ -1,13 +1,67 @@
-from controller.interfaces import IController
-from view.text_display_frame import TextDisplayFrame
 import tkinter as tk
 
+from controller.interfaces import IController
+from observer.interfaces import IPublisher
+from view.text_display_frame import TextDisplayFrame
 
-class PreviewTextDisplayFrame(TextDisplayFrame):
+
+class PreviewTextDisplayFrame(tk.Frame):
     """
-    A specialized TextDisplayFrame for preview purposes.
+    A specialized preview text display that composes TextDisplayFrame.
     """
 
-    def __init__(self, parent: tk.Widget, controller: IController, editable=True) -> None:
-        super().__init__(parent=parent, controller=controller,
-                         editable=editable, is_static_observer=True)
+    observer_id: str = "preview_text_display"
+
+    def __init__(
+        self,
+        parent: tk.Widget,
+        controller: IController,
+        editable: bool = True,
+    ) -> None:
+        super().__init__(parent)
+        self._controller: IController = controller
+        self._is_static_observer: bool = True
+
+        self._text_display = TextDisplayFrame(
+            parent=self,
+            controller=controller,
+            editable=editable,
+            is_static_observer=False,
+        )
+        self._text_display.pack(fill=tk.BOTH, expand=True)
+        self.text_widget = self._text_display.text_widget
+
+        self._controller.add_observer(self)
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id
+
+    def update(self, publisher: IPublisher) -> None:
+        """
+        Updates the preview text display.
+
+        Args:
+            publisher (IPublisher): The publisher that triggered the update.
+        """
+        self._text_display.update_for_observer(observer=self, publisher=publisher)
+
+    def disable_selection(self) -> None:
+        """
+        Disables selection in the composed text display.
+        """
+        self._text_display.disable_selection()
+
+    def is_static_observer(self) -> bool:
+        """
+        Checks whether this view is a static observer.
+
+        Returns:
+            bool: Always True for the preview text display.
+        """
+        return self._is_static_observer
