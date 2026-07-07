@@ -18,6 +18,7 @@ from view.load_project_window import LoadProjectWindow
 from view.project_window import ProjectWindow
 from view.settings_window import SettingsWindow
 from view.tag_editor_window import TagEditorWindow
+from viewmodel.main_window_view_model import MainWindowViewModel
 
 
 class MainWindow(tk.Tk, IObserver):
@@ -28,6 +29,11 @@ class MainWindow(tk.Tk, IObserver):
 
         self.DEFAULT_NOTEBOOK_INDEX = 1 # Default to the annotation view
         self._controller = controller
+        self._view_model = MainWindowViewModel(
+            controller=controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
         self._controller.register_view("main_window", self)
 
         self._annotation_view = None
@@ -47,7 +53,7 @@ class MainWindow(tk.Tk, IObserver):
         self._create_menu()
         self._render_views()
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
         self._bind_global_shortcuts()
 
     def _create_menu(self) -> None:
@@ -255,15 +261,16 @@ class MainWindow(tk.Tk, IObserver):
 
     # Observer pattern methods
     def update(self, publisher: IPublisher) -> None:
-        state = self._controller.get_observer_state(self, publisher)
-        if "active_notebook_index" in state:
-            self._notebook.select(state["active_notebook_index"])
-            if state["active_notebook_index"] == 1:
+        self._view_model.update(publisher)
+
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        if hasattr(self, "_notebook"):
+            self._notebook.select(self._view_model.active_notebook_index)
+            if self._view_model.active_notebook_index == 1 and self._annotation_view is not None:
                 self._annotation_view.focus_set()
-        if "project_name" in state:
-            project_name = state["project_name"]
-            self.title(
-                f"Text Annotation Tool ({project_name})" if project_name else "Text Annotation Tool")
+        project_name = self._view_model.project_name
+        self.title(f"Text Annotation Tool ({project_name})" if project_name else "Text Annotation Tool")
 
     # Helpers
     def open_project_window(self, tab: MenuPage = MenuPage.NEW_PROJECT, subtab: MenuSubpage = MenuSubpage.PROJECT_NAME) -> None:
@@ -453,11 +460,7 @@ class MainWindow(tk.Tk, IObserver):
         """ 
         Finalizes the main window view, updating the title based on the current project name.
         """
-        state = self._controller.get_observer_state(self)
-        if "project_name" in state:
-            project_name = state["project_name"]
-            self.title(
-                f"Text Annotation Tool ({project_name})" if project_name else "Text Annotation Tool")
+        self._view_model.finalize_view()
 
     def get_observer_id(self) -> str:
         """
@@ -466,4 +469,4 @@ class MainWindow(tk.Tk, IObserver):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()

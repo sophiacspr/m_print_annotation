@@ -2,9 +2,9 @@ import tkinter as tk
 from typing import Any
 
 from controller.interfaces import IController
-from model.interfaces import IDocumentModel
 from observer.interfaces import IPublisher
 from view.interfaces import ITextDisplayFrame
+from viewmodel.text_display_view_model import TextDisplayViewModel
 
 
 class TextDisplayFrame(tk.Frame,ITextDisplayFrame):
@@ -41,20 +41,24 @@ class TextDisplayFrame(tk.Frame,ITextDisplayFrame):
         super().__init__(parent)
 
         self._controller: IController = controller
+        self._view_model = TextDisplayViewModel(
+            controller=controller,
+            observer_id=self.observer_id,
+            is_static_observer=is_static_observer,
+            auto_register=False,
+        )
         self.text_widget: tk.Text = None
         self._editable: bool = editable
 
         self._debounce_job = None
-        self._is_typing = False
         self._internal_update = False
-        self._cursor_position: str = None
-        self._is_static_observer: bool = is_static_observer
         self._height = height
 
+        self._view_model._on_change = lambda: self.render_text(self._view_model.text)
         self._render()
 
         if is_static_observer:
-            self._controller.add_observer(self)
+            self._controller.add_observer(self._view_model)
 
     def get_observer_id(self) -> str:
         """
@@ -63,7 +67,7 @@ class TextDisplayFrame(tk.Frame,ITextDisplayFrame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()
 
     def _render(self) -> None:
         """
@@ -108,11 +112,7 @@ class TextDisplayFrame(tk.Frame,ITextDisplayFrame):
             )
             start_position = lines_before + col
 
-            selection_data = {
-                "position": start_position,
-                "selected_text": selected_text,
-            }
-            self._controller.perform_text_selected(selection_data)
+            self._view_model.select_text(selected_text=selected_text, position=start_position)
         except tk.TclError:
             pass
 
@@ -126,21 +126,21 @@ class TextDisplayFrame(tk.Frame,ITextDisplayFrame):
         if self._debounce_job:
             self.after_cancel(self._debounce_job)
 
-        self._is_typing = True
+        self._view_model.is_typing = True
 
         new_text = self.text_widget.get("1.0", tk.END).strip()
-        self._controller.perform_update_preview_text(new_text)
+        self._view_model.update_preview_text(new_text)
 
-        self._cursor_position = self.text_widget.index(tk.INSERT)
+        self._view_model.cursor_position = self.text_widget.index(tk.INSERT)
         self._debounce_job = self.after(self.DEBOUNCE_DELAY, self._finalize_update)
 
     def _finalize_update(self) -> None:
         """
         Finalizes updates to the model after debouncing.
         """
-        self._is_typing = False
+        self._view_model.is_typing = False
         new_text = self.text_widget.get("1.0", tk.END).strip()
-        self._controller.perform_update_preview_text(new_text)
+        self._view_model.update_preview_text(new_text)
         self._debounce_job = None
 
     def disable_selection(self) -> None:
@@ -169,32 +169,29 @@ class TextDisplayFrame(tk.Frame,ITextDisplayFrame):
             observer (Any): The registered observer whose source-mapping state should be used.
             publisher (IPublisher): The publisher that triggered the update.
         """
-        if self._is_typing:
-            return
-
-        if not isinstance(publisher, IDocumentModel):
+        if self._view_model.is_typing:
             return
 
         self._internal_update = True
+        self._view_model.update_for_observer(observer=observer, publisher=publisher)
+        self.render_text(self._view_model.text)
+        self._internal_update = False
 
-        text = self._controller.get_observer_state(observer, publisher).get(
-            "text", "NOTEXT"
-        )
-
+    def render_text(self, text: str) -> None:
+        """Renders text into the Tkinter text widget."""
         self.text_widget.config(state="normal")
         self.text_widget.delete("1.0", tk.END)
         self.text_widget.insert("1.0", text)
         self.text_widget.update_idletasks()
         self.text_widget.update()
 
-        if self._cursor_position:
-            self.text_widget.mark_set(tk.INSERT, self._cursor_position)
+        if self._view_model.cursor_position:
+            self.text_widget.mark_set(tk.INSERT, self._view_model.cursor_position)
 
         if not self._editable:
             self.text_widget.config(state="disabled")
 
-        self._cursor_position = None
-        self._internal_update = False
+        self._view_model.cursor_position = None
 
     def is_static_observer(self) -> bool:
         """
@@ -203,4 +200,4 @@ class TextDisplayFrame(tk.Frame,ITextDisplayFrame):
         Returns:
             bool: True if this component is static, False otherwise.
         """
-        return self._is_static_observer
+        return self._view_model.is_static_observer()

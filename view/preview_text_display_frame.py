@@ -3,6 +3,7 @@ import tkinter as tk
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
 from view.text_display_frame import TextDisplayFrame
+from viewmodel.preview_text_display_view_model import PreviewTextDisplayViewModel
 
 
 class PreviewTextDisplayFrame(tk.Frame):
@@ -20,7 +21,11 @@ class PreviewTextDisplayFrame(tk.Frame):
     ) -> None:
         super().__init__(parent)
         self._controller: IController = controller
-        self._is_static_observer: bool = True
+        self._view_model = PreviewTextDisplayViewModel(
+            controller=controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
 
         self._text_display = TextDisplayFrame(
             parent=self,
@@ -31,7 +36,15 @@ class PreviewTextDisplayFrame(tk.Frame):
         self._text_display.pack(fill=tk.BOTH, expand=True)
         self.text_widget = self._text_display.text_widget
 
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
+
+    def get_view_model(self):
+        """Returns the framework-independent view model owned by this view."""
+        return self._view_model
+
+    def dispose(self) -> None:
+        """Deregisters this view's view model from the controller."""
+        self._view_model.dispose()
 
     def get_observer_id(self) -> str:
         """
@@ -40,7 +53,7 @@ class PreviewTextDisplayFrame(tk.Frame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()
 
     def update(self, publisher: IPublisher) -> None:
         """
@@ -49,13 +62,17 @@ class PreviewTextDisplayFrame(tk.Frame):
         Args:
             publisher (IPublisher): The publisher that triggered the update.
         """
-        self._text_display.update_for_observer(observer=self, publisher=publisher)
+        self._view_model.update(publisher)
 
     def disable_selection(self) -> None:
         """
         Disables selection in the composed text display.
         """
         self._text_display.disable_selection()
+
+    def _render_from_view_model(self) -> None:
+        """Renders the current view-model state."""
+        self._text_display.render_text(self._view_model.text)
 
     def is_static_observer(self) -> bool:
         """
@@ -64,4 +81,4 @@ class PreviewTextDisplayFrame(tk.Frame):
         Returns:
             bool: Always True for the preview text display.
         """
-        return self._is_static_observer
+        return self._view_model.is_static_observer()

@@ -6,6 +6,7 @@ from controller.interfaces import IController
 from enums.menu_pages import MenuSubpage
 from observer.interfaces import IPublisher
 from view.new_project_wizard_frame import NewProjectWizardFrame
+from viewmodel.edit_project_wizard_view_model import EditProjectWizardViewModel
 
 
 class EditProjectWizardFrame(ttk.Frame):
@@ -21,6 +22,11 @@ class EditProjectWizardFrame(ttk.Frame):
     def __init__(self, controller: IController, master=None, parent_window: tk.Toplevel = None) -> None:
         super().__init__(master)
         self._controller = controller
+        self._view_model = EditProjectWizardViewModel(
+            controller=controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
         self._parent_window = parent_window
         self._available_projects: List[str] = []
         self._selected_project: str | None = None
@@ -47,7 +53,7 @@ class EditProjectWizardFrame(ttk.Frame):
         self._notebook.tab(3, text="Edit Tag Groups")
 
         self._replace_finish_button()
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
 
     def _init_page_project_selection(self) -> None:
         """Initializes the first page for selecting an existing project."""
@@ -79,8 +85,7 @@ class EditProjectWizardFrame(ttk.Frame):
             return
 
         self._selected_project = self._listbox_projects.get(selected[0])
-        self._controller.perform_load_project_data_for_editing(
-            self._selected_project)
+        self._view_model.choose_project(self._selected_project)
         self._notebook.select(1)
 
     def _replace_finish_button(self) -> None:
@@ -110,14 +115,13 @@ class EditProjectWizardFrame(ttk.Frame):
         Args:
             publisher (IPublisher): The publisher notifying about the update.
         """
-        state = self._controller.get_observer_state(
-            observer=self, publisher=publisher)
-        self._project_data = dict(state)
-        self._wizard.apply_state(state)
+        self._view_model.update(publisher)
 
-        projects = state.get("projects", [])
-        project_names = [project["name"] for project in projects]
-        self._populate_projects_listbox(project_names)
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        self._project_data = dict(self._view_model.project_data)
+        self._wizard.apply_state(self._view_model.project_data)
+        self._populate_projects_listbox(self._view_model.available_projects)
 
     def select_subtab(self, subtab: MenuSubpage) -> None:
         """
@@ -134,15 +138,14 @@ class EditProjectWizardFrame(ttk.Frame):
         """
         current_page_data = self._wizard._collect_current_page_data()
         self._project_data.update(current_page_data)
-        self._controller.perform_project_update_project_data(current_page_data)
-        self._controller.perform_project_edit_project(
-            self._selected_project, self._project_data)
+        self._view_model.update_project_data(current_page_data)
+        self._view_model.edit_project(self._selected_project, self._project_data)
 
     def destroy(self) -> None:
         """
         Cleans up the observer before destroying the widget.
         """
-        self._controller.remove_observer(self)
+        self._view_model.dispose()
         super().destroy()
 
     def get_observer_id(self) -> str:
@@ -152,7 +155,7 @@ class EditProjectWizardFrame(ttk.Frame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()
 
     def is_static_observer(self) -> bool:
         """

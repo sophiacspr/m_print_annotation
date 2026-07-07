@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
 from observer.interfaces import IObserver, IPublisher
+from viewmodel.settings_view_models import GlobalSettingsViewModel
 
 
 class GlobalSettings(tk.Frame, IObserver):
@@ -24,7 +25,8 @@ class GlobalSettings(tk.Frame, IObserver):
         self.observer_id: str = "global_settings"
 
         self._controller = controller
-        self._controller.add_observer(self)
+        self._view_model = GlobalSettingsViewModel(controller=controller, auto_register=False)
+        self._controller.add_observer(self._view_model)
 
         self._notebook = ttk.Notebook(self)
         self._notebook.pack(fill="both", expand=True)
@@ -65,7 +67,7 @@ class GlobalSettings(tk.Frame, IObserver):
         Args:
             publisher (IPublisher): The publisher notifying this observer.
         """
-        pass  # Update logic can be implemented later if needed
+        self._view_model.update(publisher)
 
     def get_observer_id(self) -> str:
         """
@@ -74,4 +76,4 @@ class GlobalSettings(tk.Frame, IObserver):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()

@@ -5,6 +5,7 @@ from tkinter import ttk
 from controller.interfaces import IController
 from enums.menu_pages import MenuSubpage
 from observer.interfaces import IPublisher
+from viewmodel.project_wizard_view_model import ProjectWizardViewModel
 
 
 class NewProjectWizardFrame(ttk.Frame):
@@ -34,9 +35,15 @@ class NewProjectWizardFrame(ttk.Frame):
         self._parent_window = parent_window
         self._controller = controller
         self._register_as_observer = register_as_observer
+        self._view_model = ProjectWizardViewModel(
+            controller=controller,
+            observer_id=self.observer_id,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
 
         if self._register_as_observer:
-            self._controller.add_observer(self)
+            self._controller.add_observer(self._view_model)
 
         self._notebook = ttk.Notebook(self)
         self._notebook.pack(expand=True, fill="both")
@@ -181,9 +188,7 @@ class NewProjectWizardFrame(ttk.Frame):
         Args:
             publisher (IPublisher): The publisher notifying about the update.
         """
-        state = self._controller.get_observer_state(
-            observer=self, publisher=publisher)
-        self.apply_state(state)
+        self._view_model.update(publisher)
 
     def apply_state(self, state: dict) -> None:
         """
@@ -192,6 +197,7 @@ class NewProjectWizardFrame(ttk.Frame):
         This allows wrapper widgets, such as EditProjectWizardFrame, to compose this
         class while remaining the registered observer themselves.
         """
+        self._view_model.apply_state(state)
         self._entry_project_name.delete(0, tk.END)
         self._entry_project_name.insert(0, state.get("project_name", ""))
 
@@ -208,6 +214,10 @@ class NewProjectWizardFrame(ttk.Frame):
         self._entry_tag_group_file_name.delete(0, tk.END)
         self._entry_tag_group_file_name.insert(
             0, state.get("tag_group_file_name", ""))
+
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        self.apply_state(self._view_model.project_data)
 
     def _populate_listbox(self, listbox: tk.Listbox, items: List[str]) -> None:
         """Fills a listbox with the given items."""
@@ -267,8 +277,7 @@ class NewProjectWizardFrame(ttk.Frame):
             return
 
         new_group = {"name": group_name, "tags": selected_tags}
-        self._controller.perform_project_add_tag_group(tag_group_file_name,
-                                                       new_group)
+        self._view_model.add_tag_group(tag_group_file_name, new_group)
 
     def _on_button_pressed_delete_tag_group(self) -> None:
         """
@@ -285,7 +294,7 @@ class NewProjectWizardFrame(ttk.Frame):
             parent_id = self._tree_created_groups.parent(item_id)
             if parent_id == "":
                 group_name = self._tree_created_groups.item(item_id, "text")
-                self._controller.perform_project_remove_tag_group(group_name)
+                self._view_model.remove_tag_group(group_name)
 
     def _on_button_pressed_add_selected_tags(self) -> None:
         """
@@ -298,7 +307,7 @@ class NewProjectWizardFrame(ttk.Frame):
         tags = []
         for index in selected_indices:
             tags.append(self._listbox_available_tags.get(index))
-        self._controller.perform_project_add_tags(tags)
+        self._view_model.add_tags(tags)
 
     def _on_button_pressed_remove_selected_tags(self) -> None:
         """
@@ -307,16 +316,15 @@ class NewProjectWizardFrame(ttk.Frame):
         selected_indices = self._listbox_selected_tags.curselection()
         if not selected_indices:
             return
-        self._controller.perform_project_remove_tags(
-            selected_indices)
+        self._view_model.remove_tags(selected_indices)
 
     def _on_button_pressed_finish(self) -> None:
         """
         Finalizes the project creation process.
         """
         current_page_data = self._collect_current_page_data()
-        self._controller.perform_project_update_project_data(current_page_data)
-        success = self._controller.perform_project_create_new_project()
+        self._view_model.update_project_data(current_page_data)
+        success = self._view_model.create_new_project()
         if success and self._parent_window:
             self._parent_window.destroy()
 
@@ -325,7 +333,7 @@ class NewProjectWizardFrame(ttk.Frame):
         Switches to the next tab in the notebook.
         """
         current_page_data = self._collect_current_page_data()
-        self._controller.perform_project_update_project_data(current_page_data)
+        self._view_model.update_project_data(current_page_data)
         index = self._notebook.index(self._notebook.select())
         self._notebook.select(index + 1)
         self._set_focus_on_default_widget()
@@ -335,7 +343,7 @@ class NewProjectWizardFrame(ttk.Frame):
         Switches to the previous tab in the notebook.
         """
         current_page_data = self._collect_current_page_data()
-        self._controller.perform_project_update_project_data(current_page_data)
+        self._view_model.update_project_data(current_page_data)
         index = self._notebook.index(self._notebook.select())
         self._notebook.select(index - 1)
         self._set_focus_on_default_widget()
@@ -390,7 +398,7 @@ class NewProjectWizardFrame(ttk.Frame):
         new_idx = idx - 1
         self._tree_created_groups.move(item_id, parent_id, new_idx)
         tag_groups = self._build_tag_groups_from_tree()
-        self._controller.perform_project_update_project_data({"tag_groups": tag_groups})
+        self._view_model.update_project_data({"tag_groups": tag_groups})
         self._try_restore_tree_selection(group_name, tag_text)
 
     def _on_button_pressed_tag_down(self) -> None:
@@ -413,7 +421,7 @@ class NewProjectWizardFrame(ttk.Frame):
         new_idx = idx + 1
         self._tree_created_groups.move(item_id, parent_id, new_idx)
         tag_groups = self._build_tag_groups_from_tree()
-        self._controller.perform_project_update_project_data({"tag_groups": tag_groups})
+        self._view_model.update_project_data({"tag_groups": tag_groups})
         self._try_restore_tree_selection(group_name, tag_text)
 
     def _build_tag_groups_from_tree(self) -> dict[str, list[str]]:
@@ -454,7 +462,7 @@ class NewProjectWizardFrame(ttk.Frame):
         Cleans up the observer before destroying the window.
         """
         if self._register_as_observer:
-            self._controller.remove_observer(self)
+            self._view_model.dispose()
         super().destroy()
 
     def get_observer_id(self) -> str:
@@ -464,7 +472,7 @@ class NewProjectWizardFrame(ttk.Frame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()
 
     def is_static_observer(self) -> bool:
         """

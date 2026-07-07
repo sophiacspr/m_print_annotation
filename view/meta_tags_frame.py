@@ -4,6 +4,7 @@ from typing import List, Dict
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
 from view.interfaces import IMetaTagsFrame
+from viewmodel.meta_tags_view_model import MetaTagsViewModel
 
 
 class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
@@ -17,9 +18,14 @@ class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
         """
         super().__init__(parent)
 
-        self.observer_id: str = "meta_tags_frame"
+        self.observer_id: str = "meta_tags"
 
         self._controller = controller
+        self._view_model = MetaTagsViewModel(
+            controller=controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
         self._tag_types = []
         self._meta_tag_entries = {}
 
@@ -52,7 +58,7 @@ class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
             self._scroll_window, width=e.width))
 
         # Register observer
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
 
     def _render(self) -> None:
         """
@@ -131,18 +137,18 @@ class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
         This method fetches layout data associated with this observer from the controller
         and processes it to adjust the layout of the view.
         """
-        state = self._controller.get_observer_state(self, publisher)
-        # Update tag types and re-render if needed
-        if tag_types := state.get("tag_types"):
-            self._tag_types = tag_types
+        self._view_model.update(publisher)
+
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        if self._view_model.tag_types != self._tag_types:
+            self._tag_types = self._view_model.tag_types
             self._render()
 
-        # Update file_name label
-        if file_name := state.get("file_name"):
-            self._file_name_label.config(text=file_name)
+        if self._view_model.file_name:
+            self._file_name_label.config(text=self._view_model.file_name)
 
-        # Update meta tag entries
-        for tag_type, tags in state.get("meta_tags", {}).items():
+        for tag_type, tags in self._view_model.meta_tags.items():
             if tag_type in self._meta_tag_entries:
                 self._meta_tag_entries[tag_type].delete(0, tk.END)
                 self._meta_tag_entries[tag_type].insert(
@@ -152,9 +158,7 @@ class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
         """
         Retrieves the layout state and updates the file_names before rendering the view.
         """
-        layout = self._controller.get_observer_state(self)
-        self._tag_types = layout.get("tag_types", [])
-        self._render()
+        self._view_model.finalize_view()
 
     def _button_pressed_update_meta_tags(self) -> None:
         """
@@ -162,7 +166,7 @@ class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
         and passing them to the controller for further processing.
         """
         meta_tags = {k: v.get() for k, v in self._meta_tag_entries.items()}
-        self._controller.perform_update_meta_tags(meta_tags)
+        self._view_model.update_meta_tags(meta_tags)
 
     def get_observer_id(self) -> str:
         """
@@ -171,4 +175,4 @@ class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()

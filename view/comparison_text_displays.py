@@ -5,6 +5,7 @@ from typing import List
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
 from view.annotation_text_display_frame import AnnotationTextDisplayFrame
+from viewmodel.comparison_text_displays_view_model import ComparisonTextDisplaysViewModel
 
 
 class ComparisonTextDisplays(tk.Frame):
@@ -24,14 +25,18 @@ class ComparisonTextDisplays(tk.Frame):
         """
         super().__init__(parent)
         self._controller: IController = controller
+        self._view_model = ComparisonTextDisplaysViewModel(
+            controller=self._controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
 
         self._num_comparison_displays: int = 0
         self._comparison_display_height = 8
         self._file_names: List[str] = []
         self._widget_structure: List[tuple[tk.Widget, AnnotationTextDisplayFrame]] = []
-        self._is_static_observer: bool = False
 
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
 
         canvas = tk.Canvas(self)
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
@@ -65,7 +70,7 @@ class ComparisonTextDisplays(tk.Frame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()
 
     def is_static_observer(self) -> bool:
         """
@@ -74,7 +79,7 @@ class ComparisonTextDisplays(tk.Frame):
         Returns:
             bool: False for this dynamic comparison display container.
         """
-        return self._is_static_observer
+        return self._view_model.is_static_observer()
 
     def _render(self) -> None:
         """
@@ -97,7 +102,7 @@ class ComparisonTextDisplays(tk.Frame):
         """
         for widget in self.scrollable_frame.winfo_children():
             if isinstance(widget, AnnotationTextDisplayFrame):
-                self._controller.remove_observer(widget)
+                widget.dispose()
             widget.destroy()
 
         self._widget_structure = []
@@ -117,37 +122,35 @@ class ComparisonTextDisplays(tk.Frame):
 
     def update(self, publisher: IPublisher) -> None:
         """
-        Retrieves updated data and layout information from the controller.
-
-        Args:
-            publisher (IPublisher): The publisher that triggered the update.
+        Legacy-compatible update method. The registered observer is the view model.
         """
-        state = self._controller.get_observer_state(self, publisher)
-
-        if "num_comparison_displays" in state:
-            new_num = state["num_comparison_displays"]
-            if new_num != self._num_comparison_displays:
-                self._num_comparison_displays = new_num
-                self._reset_widgets()
-                self._render()
-
-        if "file_names" in state:
-            self._file_names = state["file_names"]
-            for index, (file_name, (label, _)) in enumerate(
-                zip(self._file_names, self._widget_structure)
-            ):
-                if index == 0:
-                    label.config(text="Original Text:")
-                else:
-                    label.config(text=f"Filename: {file_name}")
+        self._view_model.update(publisher)
 
     def finalize_view(self) -> None:
         """
-        Retrieves the layout state and updates the file names before rendering the view.
+        Retrieves the layout state through the view model before rendering.
         """
-        layout = self._controller.get_observer_state(self)
-        self._file_names = layout["file_names"]
-        self._render()
+        self._view_model.finalize_view()
+
+    def dispose(self) -> None:
+        """Deregisters the view model from the controller."""
+        self._view_model.dispose()
+
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        if self._view_model.displays_changed:
+            self._num_comparison_displays = self._view_model.num_comparison_displays
+            self._reset_widgets()
+            self._render()
+
+        self._file_names = self._view_model.file_names
+        for index, (file_name, (label, _)) in enumerate(
+            zip(self._file_names, self._widget_structure)
+        ):
+            if index == 0:
+                label.config(text="Original Text:")
+            else:
+                label.config(text=f"Filename: {file_name}")
 
     def get_displays(self) -> List[tk.Widget]:
         """

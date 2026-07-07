@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
 from observer.interfaces import IObserver, IPublisher
+from viewmodel.settings_view_models import ProjectSettingsViewModel
 
 
 class ProjectSettings(tk.Frame, IObserver):
@@ -24,7 +25,8 @@ class ProjectSettings(tk.Frame, IObserver):
         self.observer_id: str = "project_settings"
 
         self._controller = controller
-        self._controller.add_observer(self)
+        self._view_model = ProjectSettingsViewModel(controller=controller, auto_register=False)
+        self._controller.add_observer(self._view_model)
 
         self._notebook = ttk.Notebook(self)
         self._notebook.pack(fill="both", expand=True)
@@ -58,7 +60,7 @@ class ProjectSettings(tk.Frame, IObserver):
         Args:
             publisher (IPublisher): The publisher notifying this observer.
         """
-        pass  # Implement update logic if needed
+        self._view_model.update(publisher)
 
     def get_observer_id(self) -> str:
         """
@@ -67,4 +69,4 @@ class ProjectSettings(tk.Frame, IObserver):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()

@@ -2,10 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Dict, List
 from controller.interfaces import IController
-from enums.search_types import SearchType
 from observer.interfaces import IPublisher
 from view.annotation_tag_frame import AnnotationTagFrame
 from view.interfaces import IAnnotationMenuFrame
+from viewmodel.annotation_menu_view_model import AnnotationMenuViewModel
 
 
 class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
@@ -29,6 +29,11 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
         self.observer_id: str = "annotation_menu"
 
         self._controller = controller
+        self._view_model = AnnotationMenuViewModel(
+            controller=controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
         self._template_groups: List[Dict] = []
 
         # Create the internal notebook to hold group pages
@@ -36,7 +41,7 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
         self._notebook.pack(fill="both", expand=True)
 
         # Subscribe to state updates
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
 
         # Dictionary of tag frames keyed by tag type
         self._tag_frames: Dict[str, AnnotationTagFrame] = {}
@@ -132,61 +137,43 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
         Args:
             publisher (IPublisher): The publisher that triggered the update.
         """
-        state = self._controller.get_observer_state(self, publisher)
+        self._view_model.update(publisher)
 
-        if "template_groups" in state:
-            self._template_groups = state["template_groups"]
-            self._ensure_layout()
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        self._template_groups = self._view_model.template_groups
+        self._ensure_layout()
 
         if not self._layout_rendered:
-            return  # Avoid accessing widgets before layout is rendered
+            return
 
-        if "selected_text" in state:
-            for _, tag_frame in self._tag_frames.items():
-                tag_frame.set_selected_text(state["selected_text"])
+        for _, tag_frame in self._tag_frames.items():
+            tag_frame.set_selected_text(self._view_model.selected_text)
 
-        if "suggestions" in state:
-            for tag_type, tag_frame in self._tag_frames.items():
-                suggestions = state["suggestions"].get(tag_type, [])
-                tag_frame.set_attributes(suggestions)
+        for tag_type, tag_frame in self._tag_frames.items():
+            tag_frame.set_attributes(self._view_model.suggestions.get(tag_type, {}))
+            tag_frame.set_idref_list(self._view_model.idrefs_by_tag_type.get(tag_type, [""]))
 
-        if "tags" in state:
-            for tag_type, tag_frame in self._tag_frames.items():
-                idref_list = [""] + [tag.get_id() for tag in state["tags"]
-                                     if tag.get_tag_type() == tag_type]
-                tag_frame.set_idref_list(idref_list)
-
-        if "current_search_result" in state:
-            current_search_result = state["current_search_result"]
-            # Check if the search result is from the database
-            if getattr(current_search_result, "search_type", None) == SearchType.DB:
-
-                tag_type = getattr(
-                    current_search_result, "tag_type", None)
-                if tag_type in self._tag_frames:
-                    tag_frame = self._tag_frames[tag_type]
-                    tag_frame.set_search_result(current_search_result)
-                    # The text is displayed via Selection Model, so we don't need to set it here.
-                else:
-                    raise ValueError(
-                        f"Tag type '{tag_type}' not found in tag frames.")
+        tag_type = self._view_model.current_db_search_tag_type
+        if tag_type is not None:
+            if tag_type in self._tag_frames:
+                self._tag_frames[tag_type].set_search_result(self._view_model.current_search_result)
+            else:
+                raise ValueError(f"Tag type '{tag_type}' not found in tag frames.")
 
     def finalize_view(self) -> None:
         """
         Retrieves the layout state and triggers the initial layout rendering.
         This method should be called once when the view is initialized.
         """
-        state = self._controller.get_observer_state(self)
-        if "layout" in state:
-            self._template_groups = state["layout"]["template_groups"]
-            self._ensure_layout()
+        self._view_model.finalize_view()
 
     def finalize_observers(self) -> None:
         """
         Finalizes the observer registration process.
         This method should be called once to ensure observers are registered correctly.
         """
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
         self._observers_registered = True
 
     def trigger_add_tag(self, tag_type_index: int) -> None:
@@ -205,4 +192,4 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()

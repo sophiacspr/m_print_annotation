@@ -3,6 +3,7 @@ from tkinter import ttk
 from controller.interfaces import IController
 from enums.menu_pages import MenuSubpage
 from observer.interfaces import IObserver, IPublisher
+from viewmodel.load_project_window_view_model import LoadProjectWindowViewModel
 
 
 class LoadProjectWindow(tk.Toplevel, IObserver):
@@ -23,10 +24,15 @@ class LoadProjectWindow(tk.Toplevel, IObserver):
         """
         super().__init__(master, *args, **kwargs)
 
-        self.observer_id: str = "load_project_window"
+        self.observer_id: str = "load_project"
 
         self._controller = controller
-        self._controller.add_observer(self)
+        self._view_model = LoadProjectWindowViewModel(
+            controller=controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
+        self._controller.add_observer(self._view_model)
         self.title("Load Project")
         self.geometry("600x200")
         self.resizable(False, False)
@@ -48,13 +54,12 @@ class LoadProjectWindow(tk.Toplevel, IObserver):
         Args:
             publisher (IPublisher): The publisher that triggered the update.
         """
-        state = self._controller.get_observer_state(
-            observer=self, publisher=publisher)
-        projects = state.get("projects", [])
-        project_names = [project["name"]
-                         for project in projects if "name" in project]
-        self._combo_projects["values"] = project_names
-        if project_names:
+        self._view_model.update(publisher)
+
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        self._combo_projects["values"] = self._view_model.project_names
+        if self._view_model.project_names:
             self._combo_projects.current(0)
 
     def _on_load_project(self) -> None:
@@ -63,15 +68,14 @@ class LoadProjectWindow(tk.Toplevel, IObserver):
         """
         selected = self._combo_projects.get()
         if selected:
-            self._controller.perform_project_load_project(
-                project_name=selected, reload=True)
+            self._view_model.load_project(selected)
             self.destroy()
 
     def destroy(self) -> None:
         """
         Cleans up the observer before destroying the window.
         """
-        self._controller.remove_observer(self)
+        self._view_model.dispose()
         super().destroy()
 
     def get_observer_id(self) -> str:
@@ -81,4 +85,4 @@ class LoadProjectWindow(tk.Toplevel, IObserver):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()

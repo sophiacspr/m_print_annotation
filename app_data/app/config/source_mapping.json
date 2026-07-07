@@ -1,6 +1,6 @@
 {
     "preview_text_display": {
-        "target": "PreviewTextDisplayFrame",
+        "target": "PreviewTextDisplayViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -14,7 +14,7 @@
         ]
     },
     "annotation_text_display": {
-        "target": "AnnotationTextDisplayFrame",
+        "target": "AnnotationTextDisplayViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -51,7 +51,7 @@
         ]
     },
     "search": {
-        "target": "SearchFrame",
+        "target": "SearchFrameViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -72,7 +72,7 @@
         ]
     },
     "meta_tags": {
-        "target": "MetaTagsFrame",
+        "target": "MetaTagsViewModel",
         "needs_finalization": true,
         "subscriptions": [
             {
@@ -95,7 +95,7 @@
         ]
     },
     "comparison_text_displays": {
-        "target": "ComparisonTextDisplays",
+        "target": "ComparisonTextDisplaysViewModel",
         "needs_finalization": true,
         "subscriptions": [
             {
@@ -117,7 +117,7 @@
         ]
     },
     "comparison_header": {
-        "target": "ComparisonHeaderFrame",
+        "target": "ComparisonHeaderViewModel",
         "needs_finalization": true,
         "subscriptions": [
             {
@@ -133,7 +133,7 @@
         ]
     },
     "annotation_menu": {
-        "target": "AnnotationMenuFrame",
+        "target": "AnnotationMenuViewModel",
         "needs_finalization": true,
         "subscriptions": [
             {
@@ -178,7 +178,7 @@
         ]
     },
     "extraction": {
-        "target": "ExtractionFrame",
+        "target": "ExtractionFrameViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -192,7 +192,7 @@
         ]
     },
     "new_project_wizard": {
-        "target": "NewProjectWizardFrame",
+        "target": "ProjectWizardViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -211,7 +211,7 @@
         ]
     },
     "edit_project_wizard": {
-        "target": "EditProjectWizardFrame",
+        "target": "EditProjectWizardViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -231,7 +231,7 @@
         ]
     },
     "load_project": {
-        "target": "LoadProjectWindow",
+        "target": "LoadProjectWindowViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -245,7 +245,7 @@
         ]
     },
     "global_settings": {
-        "target": "GlobalSettings",
+        "target": "GlobalSettingsViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -261,7 +261,7 @@
         ]
     },
     "project_settings": {
-        "target": "ProjectSettings",
+        "target": "ProjectSettingsViewModel",
         "needs_finalization": false,
         "subscriptions": [
             {
@@ -279,7 +279,7 @@
         ]
     },
     "main_window": {
-        "target": "MainWindow",
+        "target": "MainWindowViewModel",
         "needs_finalization": true,
         "subscriptions": [
             {

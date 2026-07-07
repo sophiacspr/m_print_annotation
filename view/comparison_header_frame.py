@@ -4,6 +4,7 @@ from typing import List
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
 from view.interfaces import IComparisonHeaderFrame
+from viewmodel.comparison_header_view_model import ComparisonHeaderViewModel
 
 
 class ComparisonHeaderFrame(tk.Frame, IComparisonHeaderFrame):
@@ -27,13 +28,18 @@ class ComparisonHeaderFrame(tk.Frame, IComparisonHeaderFrame):
         self.observer_id: str = "comparison_header"
 
         self._controller: IController = controller
+        self._view_model = ComparisonHeaderViewModel(
+            controller=controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
         self._num_files: int = 0
         self._radio_var = tk.IntVar()  # Shared variable for the radio buttons
         self.MAX_BUTTONS_PER_ROW = 8
         self._current_sentence_index: int = 0
         self._num_sentences: int = 0
 
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
 
         # self._render()
 
@@ -126,19 +132,13 @@ class ComparisonHeaderFrame(tk.Frame, IComparisonHeaderFrame):
         Args:
             publisher (IPublisher): The publisher that triggered the update.
         """
-        state = self._controller.get_observer_state(self, publisher)
+        self._view_model.update(publisher)
 
-        # Update data-related attributes if available
-        if "num_sentences" in state:
-            self._num_sentences = state["num_sentences"]
-        if "current_sentence_index" in state:
-            self._current_sentence_index = state["current_sentence_index"]
-
-        # Update layout-related attributes if available
-        if "file_names" in state:
-            self._num_files = len(state["file_names"])
-
-        # Render the updated state
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        self._num_files = self._view_model.num_files
+        self._current_sentence_index = self._view_model.current_sentence_index
+        self._num_sentences = self._view_model.num_sentences
         self._render()
 
     def _on_button_pressed_adopt(self):
@@ -170,15 +170,7 @@ class ComparisonHeaderFrame(tk.Frame, IComparisonHeaderFrame):
         """
         Retrieves the layout state and updates the file_names before rendering the view.
         """
-        state = self._controller.get_observer_state(self)
-        if "num_sentences" in state:
-            self._num_sentences = state["num_sentences"]
-        if "current_sentence_index" in state:
-            self._current_sentence_index = state["current_sentence_index"]
-        if "file_names" in state:
-
-            self._num_files = len(state["file_names"])
-        self._render()
+        self._view_model.finalize_view()
 
     def _collect_adoption_index(self) -> int:
         """
@@ -196,4 +188,4 @@ class ComparisonHeaderFrame(tk.Frame, IComparisonHeaderFrame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()

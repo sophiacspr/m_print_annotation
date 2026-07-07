@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
-import uuid
 from controller.interfaces import IController
 from observer.interfaces import IObserver, IPublisher
 from view.tooltip import ToolTip
+from viewmodel.search_frame_view_model import SearchFrameViewModel
 
 
 class SearchFrame(tk.Frame, IObserver):
@@ -18,15 +18,20 @@ class SearchFrame(tk.Frame, IObserver):
         """
         super().__init__(parent)
 
-        self.observer_id: str = "search_frame"
+        self.observer_id: str = "search"
 
         self._controller = controller
-        self._root_view_id = root_view_id
+        self._view_model = SearchFrameViewModel(
+            controller=controller,
+            root_view_id=root_view_id,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
+        self._root_view_id = self._view_model.root_view_id
 
-        # to identify the mode in which the search is performed
-        self._view_id = f"{root_view_id}_search"
-        self._search_id = uuid.uuid4().hex  # to identify the search model
-        self._controller.add_observer(self)
+        self._view_id = self._view_model.view_id
+        self._search_id = self._view_model.search_id
+        self._controller.add_observer(self._view_model)
         self._controller.register_view(self._view_id, self)
 
         self._label = ttk.Label(self, text="Search:")
@@ -86,9 +91,9 @@ class SearchFrame(tk.Frame, IObserver):
         # Navigation buttons
         self._next_prev_frame = ttk.Frame(self)
         self._prev_button = ttk.Button(
-            self._next_prev_frame, text="<", command=lambda: self._controller.perform_previous_suggestion(caller_id=self._search_id))
+            self._next_prev_frame, text="<", command=self._view_model.previous_result)
         self._next_button = ttk.Button(
-            self._next_prev_frame, text=">", command=lambda: self._controller.perform_next_suggestion(caller_id=self._search_id))
+            self._next_prev_frame, text=">", command=self._view_model.next_result)
         self._prev_button.pack(side=tk.LEFT, padx=2)
         self._next_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self._prev_button, text="Go to previous search result.")
@@ -133,16 +138,14 @@ class SearchFrame(tk.Frame, IObserver):
         """
         search_term = self._entry.get()
         if not search_term:
-            self._controller.perform_end_search()
+            self._view_model.trigger_search(search_term, False, False, False)
             return
-        options = {
-            "search_term": search_term,
-            "case_sensitive": self._case_var.get(),
-            "whole_word": self._whole_word_var.get(),
-            "regex": self._regex_var.get()
-        }
-        self._controller.perform_manual_search(
-            search_options=options, caller_mode=self._root_view_id, caller_id=self._search_id)
+        self._view_model.trigger_search(
+            search_term=search_term,
+            case_sensitive=self._case_var.get(),
+            whole_word=self._whole_word_var.get(),
+            regex=self._regex_var.get(),
+        )
 
     def reset_entry(self) -> None:
         """
@@ -159,13 +162,13 @@ class SearchFrame(tk.Frame, IObserver):
         """
         Updates the search frame with the current observer state from the controller.
         """
-        state = self._controller.get_observer_state(
-            observer=self, publisher=publisher)
-        index = state.get("index", 0)
-        num_results = state.get("num_results", 0)
-        self._index_var.set(index+1)
-        self._num_var.set(num_results)
-        self._update_info_label
+        self._view_model.update(publisher)
+
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
+        self._index_var.set(self._view_model.index + 1)
+        self._num_var.set(self._view_model.num_results)
+        self._update_info_label()
 
     def _update_info_label(self) -> None:
         """
@@ -181,4 +184,4 @@ class SearchFrame(tk.Frame, IObserver):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()

@@ -4,6 +4,7 @@ from tkinter import ttk
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
 from view.interfaces import IExtractionFrame
+from viewmodel.extraction_frame_view_model import ExtractionFrameViewModel
 
 
 class ExtractionFrame(tk.Frame, IExtractionFrame):
@@ -17,9 +18,14 @@ class ExtractionFrame(tk.Frame, IExtractionFrame):
         """
         super().__init__(parent)
 
-        self.observer_id: str = "extraction_frame"
+        self.observer_id: str = "extraction"
 
         self._controller = controller
+        self._view_model = ExtractionFrameViewModel(
+            controller=controller,
+            on_change=self._render_from_view_model,
+            auto_register=False,
+        )
 
         # Configure the grid layout manager
         # Ensure the column expands to fill the frame
@@ -27,7 +33,7 @@ class ExtractionFrame(tk.Frame, IExtractionFrame):
         self.columnconfigure(1, weight=1)
 
         # Register as an observer
-        self._controller.add_observer(self)
+        self._controller.add_observer(self._view_model)
 
         self._render()
 
@@ -124,27 +130,29 @@ class ExtractionFrame(tk.Frame, IExtractionFrame):
         Raises:
             KeyError: If the "file_path" key is not present in the retrieved data.
         """
-        data = self._controller.get_observer_state(self, publisher)
-        file_path = data["file_path"]
+        self._view_model.update(publisher)
+
+    def _render_from_view_model(self) -> None:
+        """Renders state from the framework-independent view model."""
         self.pdf_path_entry.delete(0, tk.END)
-        self.pdf_path_entry.insert(0, file_path)
+        self.pdf_path_entry.insert(0, self._view_model.file_path)
 
     def _on_button_pressed_extract_pages(self) -> None:
         """
         Handler for the extract button. Invokes the controller's method for PDF extraction.
         """
-        extraction_data = {"pdf_path": self.pdf_path_entry.get(),
-                           "page_range": self.page_range_entry.get(),
-                           "page_margins": self.page_margins_entry.get()
-                           }
-        self._controller.perform_pdf_extraction(extraction_data)
+        self._view_model.extract_pages(
+            pdf_path=self.pdf_path_entry.get(),
+            page_range=self.page_range_entry.get(),
+            page_margins=self.page_margins_entry.get(),
+        )
 
     def _on_button_pressed_adopt_text(self) -> None:
         """
         Handler for the adopt text button. Invokes the controller's method to 
         adopt the extracted text.
         """
-        self._controller.perform_text_adoption()
+        self._view_model.adopt_text()
 
     def get_observer_id(self) -> str:
         """
@@ -153,4 +161,4 @@ class ExtractionFrame(tk.Frame, IExtractionFrame):
         Returns:
             str: The observer identifier.
         """
-        return self.observer_id
+        return self._view_model.get_observer_id()
