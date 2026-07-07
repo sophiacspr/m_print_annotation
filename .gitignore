@@ -183,3 +183,5 @@ depr_app_data.7z
 
 # xlsx
 *.xlsx
+
+*_depr.*
