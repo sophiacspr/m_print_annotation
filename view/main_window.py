@@ -24,6 +24,8 @@ class MainWindow(tk.Tk, IObserver):
     def __init__(self, controller: IController) -> None:
         super().__init__()
 
+        self.observer_id: str = "main_window"
+
         self.DEFAULT_NOTEBOOK_INDEX = 1 # Default to the annotation view
         self._controller = controller
         self._controller.register_view("main_window", self)
@@ -456,3 +458,12 @@ class MainWindow(tk.Tk, IObserver):
             project_name = state["project_name"]
             self.title(
                 f"Text Annotation Tool ({project_name})" if project_name else "Text Annotation Tool")
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

@@ -18,6 +18,7 @@ class AnnotationView(View):
             controller (IController): The controller managing actions for this view.
         """
         super().__init__(parent, controller)
+        self.observer_id: str = "annotation_view"
         self._view_id = "annotation"
         self._controller.register_view(self._view_id)
         self._render()
@@ -97,3 +98,12 @@ class AnnotationView(View):
 
     def _on_shortcut_tag_4(self, event=None) -> None:
         self._right_frame.trigger_add_tag(3)
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

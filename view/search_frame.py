@@ -17,6 +17,9 @@ class SearchFrame(tk.Frame, IObserver):
             root_view_id (str): Identifier for the root view, used for search context.
         """
         super().__init__(parent)
+
+        self.observer_id: str = "search_frame"
+
         self._controller = controller
         self._root_view_id = root_view_id
 
@@ -170,3 +173,12 @@ class SearchFrame(tk.Frame, IObserver):
         """
         self._info_text_var.set(
             f"{self._index_var.get()}/{self._num_var.get()}")
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

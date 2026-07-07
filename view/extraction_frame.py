@@ -16,6 +16,9 @@ class ExtractionFrame(tk.Frame, IExtractionFrame):
             controller (IController): The controller managing actions for this view.
         """
         super().__init__(parent)
+
+        self.observer_id: str = "extraction_frame"
+
         self._controller = controller
 
         # Configure the grid layout manager
@@ -142,3 +145,12 @@ class ExtractionFrame(tk.Frame, IExtractionFrame):
         adopt the extracted text.
         """
         self._controller.perform_text_adoption()
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

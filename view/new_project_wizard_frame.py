@@ -479,3 +479,12 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         """
         self._controller.remove_observer(self)
         super().destroy()
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

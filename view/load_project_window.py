@@ -22,6 +22,9 @@ class LoadProjectWindow(tk.Toplevel, IObserver):
             master (tk.Tk): The parent application window.
         """
         super().__init__(master, *args, **kwargs)
+
+        self.observer_id: str = "load_project_window"
+
         self._controller = controller
         self._controller.add_observer(self)
         self.title("Load Project")
@@ -70,3 +73,12 @@ class LoadProjectWindow(tk.Toplevel, IObserver):
         """
         self._controller.remove_observer(self)
         super().destroy()
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

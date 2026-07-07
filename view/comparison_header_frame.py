@@ -23,6 +23,9 @@ class ComparisonHeaderFrame(tk.Frame, IComparisonHeaderFrame):
             num_annotators (int): Number of annotators for radio buttons.
         """
         super().__init__(parent)
+
+        self.observer_id: str = "comparison_header"
+
         self._controller: IController = controller
         self._num_files: int = 0
         self._radio_var = tk.IntVar()  # Shared variable for the radio buttons
@@ -185,3 +188,12 @@ class ComparisonHeaderFrame(tk.Frame, IComparisonHeaderFrame):
             int: The index of the selected annotation (0 = manual, >0 = predefined annotation).
         """
         return self._radio_var.get()
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

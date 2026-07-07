@@ -20,6 +20,9 @@ class ProjectSettings(tk.Frame, IObserver):
             master: The parent widget.
         """
         super().__init__(master)
+
+        self.observer_id: str = "project_settings"
+
         self._controller = controller
         self._controller.add_observer(self)
 
@@ -56,3 +59,12 @@ class ProjectSettings(tk.Frame, IObserver):
             publisher (IPublisher): The publisher notifying this observer.
         """
         pass  # Implement update logic if needed
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

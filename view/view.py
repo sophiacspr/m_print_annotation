@@ -18,7 +18,9 @@ class View(tk.Frame, IView):
             controller (IController): The controller managing actions for this view.
         """
         super().__init__(parent)
-        # Generate a unique identifier for this view
+
+        self.observer_id: str = "view"  # Default observer ID; subclasses should override
+
         self._controller = controller
         self._view_id = None  # will be assigned by subclass
         self._bind_shortcuts()
@@ -81,3 +83,12 @@ class View(tk.Frame, IView):
             str: The unique view identifier.
         """
         return self._view_id
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

@@ -20,6 +20,9 @@ class GlobalSettings(tk.Frame, IObserver):
             master: The parent widget.
         """
         super().__init__(master)
+
+        self.observer_id: str = "global_settings"
+
         self._controller = controller
         self._controller.add_observer(self)
 
@@ -63,3 +66,12 @@ class GlobalSettings(tk.Frame, IObserver):
             publisher (IPublisher): The publisher notifying this observer.
         """
         pass  # Update logic can be implemented later if needed
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

@@ -23,6 +23,9 @@ class ComparisonView(View, IComparisonView):
             controller (IController): The controller managing actions for this view.
         """
         super().__init__(parent, controller)
+
+        self.observer_id: str = "comparison_view"
+
         self._view_id = "comparison"
         self._controller.register_view(view_id=self._view_id, view=self)
         self._text_displays = None
@@ -100,3 +103,12 @@ class ComparisonView(View, IComparisonView):
         Disables shortcuts.
         """
         pass
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

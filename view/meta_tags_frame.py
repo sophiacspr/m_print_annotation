@@ -17,6 +17,8 @@ class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
         """
         super().__init__(parent)
 
+        self.observer_id: str = "meta_tags_frame"
+
         self._controller = controller
         self._tag_types = []
         self._meta_tag_entries = {}
@@ -161,3 +163,12 @@ class MetaTagsFrame(tk.Frame, IMetaTagsFrame):
         """
         meta_tags = {k: v.get() for k, v in self._meta_tag_entries.items()}
         self._controller.perform_update_meta_tags(meta_tags)
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

@@ -26,6 +26,8 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
         """
         super().__init__(parent)
 
+        self.observer_id: str = "annotation_menu"
+
         self._controller = controller
         self._template_groups: List[Dict] = []
 
@@ -195,3 +197,12 @@ class AnnotationMenuFrame(tk.Frame, IAnnotationMenuFrame):
             tag_type_index (int): The index of the tag type to add (0-based).
         """
         self._tag_frames_list[tag_type_index].trigger_add_tag()
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id

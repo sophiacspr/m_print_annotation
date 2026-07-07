@@ -4,9 +4,10 @@ from typing import Any
 from controller.interfaces import IController
 from model.interfaces import IDocumentModel
 from observer.interfaces import IPublisher
+from view.interfaces import ITextDisplayFrame
 
 
-class TextDisplayFrame(tk.Frame):
+class TextDisplayFrame(tk.Frame,ITextDisplayFrame):
     """
     A reusable Tkinter frame that displays text and owns the concrete text widget.
 

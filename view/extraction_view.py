@@ -20,6 +20,9 @@ class ExtractionView(View):
             controller (IController): The controller managing actions for this view.
         """
         super().__init__(parent, controller)
+
+        self.observer_id: str = "extraction_view"
+
         self._file_name = ""  # Initialize file name as an empty string
         self._view_id = "extraction"
         self._controller.register_view(self._view_id)
@@ -78,3 +81,12 @@ class ExtractionView(View):
         Disables shortcuts.
         """
         pass
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id
