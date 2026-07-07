@@ -273,26 +273,44 @@ class ProjectDataProcessor:
 
     def _create_database_config_payloads(self) -> None:
         database_config_payloads = {}
+
         for tag in self._project_data.get("selected_tags", []):
             if not tag.get("has_database", False):
                 continue
 
             source_tag_name = tag.get("original_name", tag.get("name", ""))
             source_project = tag.get("project", "")
+
             if source_project == "tag_pool":
                 config_path = self._file_handler.resolve_path(
-                    "app_database_configs", self._derive_file_name(source_tag_name))
+                    "app_database_configs",
+                    self._derive_file_name(source_tag_name),
+                )
             else:
                 with self._file_handler.use_project(source_project):
                     project_settings = self._file_handler.read_file(
-                        "project_settings")
-                    source_database_config_file = project_settings.get(
-                        "tags", {}).get(source_tag_name, {}).get("database", {}).get("current_config_file", self._derive_file_name(source_tag_name))
+                        "project_settings"
+                    )
+                    source_database_config_file = (
+                        project_settings
+                        .get("tags", {})
+                        .get(source_tag_name, {})
+                        .get("database", {})
+                        .get(
+                            "current_config_file",
+                            self._derive_file_name(source_tag_name),
+                        )
+                    )
                     config_path = self._file_handler.resolve_path(
-                        "project_database_config_directory", source_database_config_file)
-                database_config = self._file_handler.read_file(config_path)
-                database_config_payloads[self._derive_file_name(
-                    tag.get('name', ''))] = database_config
+                        "project_database_config_directory",
+                        source_database_config_file,
+                    )
+
+            database_config = self._file_handler.read_file(config_path)
+            database_config_payloads[
+                self._derive_file_name(tag.get("name", ""))
+            ] = database_config
+
         self._project_data["database_config_payloads"] = database_config_payloads
 
     def _create_project_settings_payload(self) -> None:
