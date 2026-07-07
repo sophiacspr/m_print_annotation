@@ -185,3 +185,5 @@ depr_app_data.7z
 *.xlsx
 
 *_depr.*
+*_depr*
+*.zip
