@@ -1,204 +1,223 @@
 {
-    "PreviewTextDisplayFrame": {
-        "ExtractionDocumentModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "extraction_document_model": [
+    "preview_text_display": {
+        "target": "PreviewTextDisplayFrame",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "extraction_document_model",
+                "trigger": "ExtractionDocumentModel",
+                "keys": [
                     "text"
-                ]
+                ],
+                "deregister_on_reload": true
             }
-        }
+        ]
     },
-    "AnnotationTextDisplayFrame": {
-        "AnnotationDocumentModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "annotation_document_model": [
+    "annotation_text_display": {
+        "target": "AnnotationTextDisplayFrame",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "annotation_document_model",
+                "trigger": "AnnotationDocumentModel",
+                "keys": [
                     "text"
-                ]
-            }
-        },
-        "SearchModelManager": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "search_model_manager": []
-            }
-        },
-        "SearchModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "current_search_model": [
+                ],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "search_model_manager",
+                "trigger": "SearchModelManager",
+                "keys": [],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "current_search_model",
+                "trigger": "SearchModel",
+                "keys": [
                     "current_search_result"
-                ]
-            }
-        },
-        "HighlightModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "highlight_model": [
+                ],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "highlight_model",
+                "trigger": "HighlightModel",
+                "keys": [
                     "tag_highlight_data",
                     "search_highlight_data"
-                ]
+                ],
+                "deregister_on_reload": true
             }
-        }
+        ]
     },
-    "SearchFrame": {
-        "SearchModelManager": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "search_model_manager": []
-            }
-        },
-        "SearchModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "current_search_model": [
+    "search": {
+        "target": "SearchFrame",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "search_model_manager",
+                "trigger": "SearchModelManager",
+                "keys": [],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "current_search_model",
+                "trigger": "SearchModel",
+                "keys": [
                     "index",
                     "num_results"
-                ]
+                ],
+                "deregister_on_reload": true
             }
-        }
+        ]
     },
-    "MetaTagsFrame": {
-        "AnnotationDocumentModel": {
-            "needs_finalization": true,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "annotation_document_model": [
+    "meta_tags": {
+        "target": "MetaTagsFrame",
+        "needs_finalization": true,
+        "subscriptions": [
+            {
+                "source": "annotation_document_model",
+                "trigger": "AnnotationDocumentModel",
+                "keys": [
                     "file_name",
                     "meta_tags"
-                ]
-            }
-        },
-        "LayoutConfigurationModel": {
-            "needs_finalization": true,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "layout_configuration_model": [
+                ],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "layout_configuration_model",
+                "trigger": "LayoutConfigurationModel",
+                "keys": [
                     "tag_types"
-                ]
+                ],
+                "deregister_on_reload": true
             }
-        }
+        ]
     },
-    "ComparisonTextDisplays": {
-        "ComparisonModel": {
-            "needs_finalization": true,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "comparison_model": [
+    "comparison_text_displays": {
+        "target": "ComparisonTextDisplays",
+        "needs_finalization": true,
+        "subscriptions": [
+            {
+                "source": "comparison_model",
+                "trigger": "ComparisonModel",
+                "keys": [
                     "file_names"
-                ]
-            }
-        },
-        "LayoutConfigurationModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "layout_configuration_model": [
+                ],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "layout_configuration_model",
+                "trigger": "LayoutConfigurationModel",
+                "keys": [
                     "num_comparison_displays"
-                ]
+                ],
+                "deregister_on_reload": true
             }
-        }
+        ]
     },
-    "ComparisonHeaderFrame": {
-        "ComparisonModel": {
-            "needs_finalization": true,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "comparison_model": [
+    "comparison_header": {
+        "target": "ComparisonHeaderFrame",
+        "needs_finalization": true,
+        "subscriptions": [
+            {
+                "source": "comparison_model",
+                "trigger": "ComparisonModel",
+                "keys": [
                     "file_names",
                     "num_sentences",
                     "current_sentence_index"
-                ]
+                ],
+                "deregister_on_reload": true
             }
-        }
+        ]
     },
-    "AnnotationMenuFrame": {
-        "SelectionModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "selection_model": [
+    "annotation_menu": {
+        "target": "AnnotationMenuFrame",
+        "needs_finalization": true,
+        "subscriptions": [
+            {
+                "source": "selection_model",
+                "trigger": "SelectionModel",
+                "keys": [
                     "selected_text",
                     "suggestions"
-                ]
-            }
-        },
-        "AnnotationDocumentModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "annotation_document_model": [
+                ],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "annotation_document_model",
+                "trigger": "AnnotationDocumentModel",
+                "keys": [
                     "tags"
-                ]
-            }
-        },
-        "SearchModelManager": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "search_model_manager": []
-            }
-        },
-        "SearchModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "current_search_model": [
+                ],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "search_model_manager",
+                "trigger": "SearchModelManager",
+                "keys": [],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "current_search_model",
+                "trigger": "SearchModel",
+                "keys": [
                     "current_search_result"
-                ]
-            }
-        },
-        "LayoutConfigurationModel": {
-            "needs_finalization": true,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "layout_configuration_model": [
+                ],
+                "deregister_on_reload": true
+            },
+            {
+                "source": "layout_configuration_model",
+                "trigger": "LayoutConfigurationModel",
+                "keys": [
                     "template_groups"
-                ]
+                ],
+                "deregister_on_reload": true
             }
-        }
+        ]
     },
-    "ExtractionFrame": {
-        "ExtractionDocumentModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": true,
-            "source_keys": {
-                "extraction_document_model": [
+    "extraction": {
+        "target": "ExtractionFrame",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "extraction_document_model",
+                "trigger": "ExtractionDocumentModel",
+                "keys": [
                     "file_path"
-                ]
+                ],
+                "deregister_on_reload": true
             }
-        }
+        ]
     },
-    "NewProjectWizardFrame": {
-        "ProjectWizardModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": false,
-            "source_keys": {
-                "project_wizard_model": [
+    "new_project_wizard": {
+        "target": "NewProjectWizardFrame",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "project_wizard_model",
+                "trigger": "ProjectWizardModel",
+                "keys": [
                     "project_name",
                     "globally_available_tags",
                     "locally_available_tags",
                     "selected_tags",
                     "tag_group_file_name",
                     "tag_groups"
-                ]
+                ],
+                "deregister_on_reload": false
             }
-        }
+        ]
     },
-    "EditProjectWizardFrame": {
-        "ProjectWizardModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": false,
-            "source_keys": {
-                "project_wizard_model": [
+    "edit_project_wizard": {
+        "target": "EditProjectWizardFrame",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "project_wizard_model",
+                "trigger": "ProjectWizardModel",
+                "keys": [
                     "projects",
                     "project_name",
                     "globally_available_tags",
@@ -206,67 +225,79 @@
                     "selected_tags",
                     "tag_group_file_name",
                     "tag_groups"
-                ]
+                ],
+                "deregister_on_reload": false
             }
-        }
+        ]
     },
-    "LoadProjectWindow": {
-        "ProjectWizardModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": false,
-            "source_keys": {
-                "project_wizard_model": [
+    "load_project": {
+        "target": "LoadProjectWindow",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "project_wizard_model",
+                "trigger": "ProjectWizardModel",
+                "keys": [
                     "projects"
-                ]
+                ],
+                "deregister_on_reload": false
             }
-        }
+        ]
     },
-    "GlobalSettings": {
-        "GlobalSettingsModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": false,
-            "source_keys": {
-                "global_settings_model": [
+    "global_settings": {
+        "target": "GlobalSettings",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "global_settings_model",
+                "trigger": "GlobalSettingsModel",
+                "keys": [
                     "default_directories",
                     "available_align_options",
                     "align_option"
-                ]
+                ],
+                "deregister_on_reload": false
             }
-        }
+        ]
     },
-    "ProjectSettings": {
-        "ProjectSettingsModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": false,
-            "source_keys": {
-                "project_settings_model": [
+    "project_settings": {
+        "target": "ProjectSettings",
+        "needs_finalization": false,
+        "subscriptions": [
+            {
+                "source": "project_settings_model",
+                "trigger": "ProjectSettingsModel",
+                "keys": [
                     "project_name",
                     "color_scheme",
                     "search_normalization",
                     "are_all_search_results_highlighted",
                     "current_language"
-                ]
+                ],
+                "deregister_on_reload": false
             }
-        }
+        ]
     },
-    "MainWindow": {
-        "LayoutConfigurationModel": {
-            "needs_finalization": false,
-            "needs_deregistration_on_reload": false,
-            "source_keys": {
-                "layout_configuration_model": [
+    "main_window": {
+        "target": "MainWindow",
+        "needs_finalization": true,
+        "subscriptions": [
+            {
+                "source": "layout_configuration_model",
+                "trigger": "LayoutConfigurationModel",
+                "keys": [
                     "active_notebook_index"
-                ]
-            }
-        },
-        "ProjectSettingsModel": {
-            "needs_finalization": true,
-            "needs_deregistration_on_reload": false,
-            "source_keys": {
-                "project_settings_model": [
+                ],
+                "deregister_on_reload": false
+            },
+            {
+                "source": "project_settings_model",
+                "trigger": "ProjectSettingsModel",
+                "keys": [
                     "project_name"
-                ]
+                ],
+                "deregister_on_reload": false
             }
-        }
+        ]
     }
 }

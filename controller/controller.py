@@ -95,9 +95,10 @@ class Controller(IController):
 
         # config
         self.update_project_name()
-        # Load the source mapping once and store it in an instance variable
-        self._source_mapping = self._file_handler.read_file(
-            "source_mapping")
+        # Load and normalize the source mapping once. The controller then works
+        # only with the normalized mapping shape.
+        raw_source_mapping = self._file_handler.read_file("source_mapping")
+        self._source_mapping = self._normalize_source_mapping(raw_source_mapping)
 
         # views
         self._main_window: MainWindow = None
@@ -310,71 +311,52 @@ class Controller(IController):
 
     def add_observer(self, observer: IObserver) -> None:
         """
-        Registers an observer to all relevant publishers based on the predefined mapping.
+        Registers an observer or ViewModel according to the normalized source mapping.
 
-        This method retrieves all publishers related to the observer and registers it
-        dynamically by checking the keys in `source_keys`.
-
-        Args:
-            observer (IObserver): The observer to be added.
-
-        Raises:
-            KeyError: If no mapping exists for the given observer.
+        The controller no longer infers sources from nested legacy source_keys directly.
+        It resolves the observer to a stable mapping id, reads explicit subscriptions,
+        and registers the observer with the configured source publishers.
         """
-        # Retrieve the full mapping for the observer (without specifying a publisher)
         observer_config = self._get_observer_config(observer)
+        registered_sources = []
 
-        # Iterate through all publishers by extracting keys from `source_keys`
-        for config in observer_config.values():
-            needs_finalization = config["needs_finalization"]
-            source_keys = config["source_keys"]
+        for subscription in observer_config["subscriptions"]:
+            source_name = subscription["source"]
+            publisher_instance = self._get_source(source_name)
 
-            # Extract publisher instances dynamically based on `source_keys`
-            for publisher_key in source_keys.keys():
-                # Convert the string key into the actual instance stored in the Controller
-                publisher_instance = getattr(self, f"_{publisher_key}", None)
+            if publisher_instance is None:
+                print(
+                    f"INFO: Publisher '{source_name}' not yet available for observer "
+                    f"'{observer.__class__.__name__}'"
+                )
+                continue
 
-                if publisher_instance is None:
-                    print(
-                        f"INFO: Publisher '{publisher_key}' not yet available for observer '{observer.__class__.__name__}'")
-                else:  # Register observer with the publisher
-                    publisher_instance.add_observer(observer)
+            if publisher_instance in registered_sources:
+                continue
 
-            # Add observer to finalize list if required
-            if needs_finalization and observer not in self._views_to_finalize:
-                self._views_to_finalize.append(observer)
+            publisher_instance.add_observer(observer)
+            registered_sources.append(publisher_instance)
+
+        if observer_config.get("needs_finalization", False) and observer not in self._views_to_finalize:
+            self._views_to_finalize.append(observer)
 
     def remove_observer(self, observer: IObserver) -> None:
         """
-        Removes an observer from all relevant publishers and clears any associated mappings or registrations.
-
-        This method dynamically retrieves all publishers related to the observer and removes the observer
-        from them by resolving the publisher names via Controller attributes.
-
-        Args:
-            observer (IObserver): The observer to be removed.
-
-        Raises:
-            KeyError: If no mapping exists for the given observer or a publisher instance cannot be resolved.
+        Removes an observer or ViewModel from all publishers configured in the source mapping.
         """
-        # Retrieve the full mapping for the observer (without specifying a publisher)
         observer_config = self._get_observer_config(observer)
+        processed_sources = []
 
-        # Iterate through all publishers by extracting keys from `source_keys`
-        for config in observer_config.values():
-            source_keys = config["source_keys"]
+        for subscription in observer_config["subscriptions"]:
+            source_name = subscription["source"]
+            publisher_instance = self._get_source(source_name)
 
-            for publisher_key in source_keys.keys():
-                # Convert the string key into the actual instance stored in the Controller
-                publisher_instance = getattr(self, f"_{publisher_key}", None)
+            if publisher_instance is None or publisher_instance in processed_sources:
+                continue
 
-                if publisher_instance is None:
-                    continue
+            publisher_instance.remove_observer(observer)
+            processed_sources.append(publisher_instance)
 
-                # Remove observer from the publisher
-                publisher_instance.remove_observer(observer)
-
-        # If the observer was added to the finalize list, remove it
         if observer in self._views_to_finalize:
             self._views_to_finalize.remove(observer)
         if observer in self._search_views:
@@ -382,96 +364,263 @@ class Controller(IController):
 
     def get_observer_state(self, observer: IObserver, publisher: IPublisher = None) -> dict:
         """
-        Retrieves the updated state information for a specific observer and publisher.
+        Returns the projected state for one observer according to the normalized mapping.
 
-        If a required data source (publisher) is not yet available, it is ignored temporarily,
-        but the subscription remains valid and will be re-evaluated on the next update.
-
-        Args:
-            observer (IObserver): The observer requesting updated state information.
-            publisher (IPublisher, optional): The publisher that triggered the update. Defaults to None.
-
-        Returns:
-            dict: The computed state information specific to the requesting observer.
-
-        Raises:
-            KeyError: If the provided observer is not registered.
+        If a publisher triggered the update, only subscriptions whose trigger matches that
+        publisher class are evaluated. If no publisher is provided, all subscriptions for
+        the observer are evaluated.
         """
-        mapping = self._get_observer_config(observer, publisher)
-
+        observer_config = self._get_observer_config(observer, publisher)
         state = {}
+        is_static_observer = getattr(observer, "is_static_observer", lambda: False)()
 
-        if publisher:
-            source_keys = mapping["source_keys"]
+        for subscription in observer_config["subscriptions"]:
+            source_name = subscription["source"]
+            configured_source = self._get_source(source_name)
+            source = configured_source
 
-            for source_name, keys in source_keys.items():
-
-                if observer.is_static_observer() or source_name not in mapping["source_keys"]:
-                    source = getattr(self, f"_{source_name}", None)
-                else:
+            if publisher is not None and not is_static_observer:
+                if configured_source is publisher:
+                    source = publisher
+                elif configured_source is None and self._subscription_matches_publisher(subscription, publisher):
                     source = publisher
 
-                if source is not None:
-                    for key in keys:
-                        value = source.get_state().get(key)
+            if source is None:
+                continue
 
-                        if value is not None:
-                            state[key] = value
-
-        else:
-            # Combine all keys from all publishers
-            for publisher_mapping in mapping.values():
-                for source_name, keys in publisher_mapping["source_keys"].items():
-                    source = getattr(self, f"_{source_name}", None)
-                    if source is not None:
-                        for key in keys:
-                            value = source.get_state().get(key)
-                            if value is not None:
-                                state[key] = value
+            state.update(self._project_state(source, subscription.get("keys", [])))
 
         return state
 
-    def _get_observer_config(self, observer: IObserver, publisher: IPublisher = None) -> Dict:
+    def _get_observer_config(self, observer: IObserver, publisher: IPublisher = None) -> Dict[str, Any]:
         """
-        Retrieves the configuration for a given observer and optionally for a specific publisher.
+        Retrieves the normalized mapping entry for an observer or ViewModel.
 
-        If the publisher is provided, the method filters the configuration further based on the publisher type.
-        If no publisher is provided, it returns the entire mapping for all publishers related to the observer.
-
-        Args:
-            observer (IObserver): The observer requesting the configuration.
-            publisher (IPublisher, optional): The publisher that triggered the update. Defaults to None.
-
-        Returns:
-            Dict: The configuration dictionary associated with the observer.
-                If a publisher is provided, returns only that publisher's configuration.
-                If no publisher is provided, returns the full mapping for all publishers.
-
-        Raises:
-            KeyError: If no configuration is found for the observer or the specific publisher.
+        Observer lookup is based on a stable observer id when available. During the
+        migration period, lookup by target class name is also supported.
         """
-        # Use preloaded source mapping
-        observer_name = observer.__class__.__name__
+        observer_id = self._get_observer_id(observer)
 
-        # Step 1: Filter by Observer
-        if observer_name not in self._source_mapping:
+        if observer_id not in self._source_mapping:
             raise KeyError(
-                f"No configuration found for observer {observer_name}")
+                f"No configuration found for observer {observer.__class__.__name__}"
+            )
 
-        observer_config = self._source_mapping[observer_name]
+        observer_config = self._source_mapping[observer_id]
 
-        # If no publisher is provided, return all mappings for the observer
         if publisher is None:
             return observer_config
 
-        # Step 2: Filter by Publisher
-        publisher_name = publisher.__class__.__name__
+        matching_subscriptions = [
+            subscription
+            for subscription in observer_config["subscriptions"]
+            if self._subscription_matches_publisher(subscription, publisher)
+        ]
 
-        if publisher_name not in observer_config:
+        if not matching_subscriptions:
             raise KeyError(
-                f"No configuration found for observer {observer_name} and publisher {publisher_name}")
+                f"No configuration found for observer {observer.__class__.__name__} "
+                f"and publisher {publisher.__class__.__name__}"
+            )
 
-        return observer_config[publisher_name]
+        return {
+            **observer_config,
+            "subscriptions": matching_subscriptions,
+        }
+
+    def _get_observer_id(self, observer: IObserver) -> str:
+        """
+        Resolves an observer instance to the stable mapping id.
+
+        Preferred: observer.get_observer_id().
+        Migration fallback: match observer.__class__.__name__ against mapping target.
+        """
+        observer_id_getter = getattr(observer, "get_observer_id", None)
+        if callable(observer_id_getter):
+            observer_id = observer_id_getter()
+            if observer_id in self._source_mapping:
+                return observer_id
+
+        observer_name = observer.__class__.__name__
+        if observer_name in self._source_mapping:
+            return observer_name
+
+        for mapping_id, config in self._source_mapping.items():
+            if self._observer_matches_target(observer, mapping_id, config):
+                return mapping_id
+
+        return observer_name
+
+    def _observer_matches_target(self, observer: IObserver, mapping_id: str, config: Dict[str, Any]) -> bool:
+        """
+        Checks whether an observer instance belongs to one normalized mapping target.
+        """
+        observer_name = observer.__class__.__name__
+        target_name = config.get("target", mapping_id)
+        legacy_targets = config.get("legacy_targets", [])
+
+        observer_id_getter = getattr(observer, "get_observer_id", None)
+        explicit_observer_id = observer_id_getter() if callable(observer_id_getter) else None
+
+        return (
+            explicit_observer_id == mapping_id
+            or observer_name == target_name
+            or observer_name in legacy_targets
+        )
+
+    def _subscription_matches_publisher(self, subscription: Dict[str, Any], publisher: IPublisher) -> bool:
+        """
+        Checks whether a subscription should react to the triggering publisher.
+        """
+        trigger_name = subscription.get("trigger")
+        if not trigger_name:
+            return True
+        return trigger_name == publisher.__class__.__name__
+
+    def _project_state(self, source: IPublisher, keys: List[str]) -> Dict[str, Any]:
+        """
+        Projects selected state keys from one publisher.
+        """
+        projected_state = {}
+        source_state = source.get_state()
+
+        for key in keys:
+            value = source_state.get(key)
+            if value is not None:
+                projected_state[key] = value
+
+        return projected_state
+
+    def _get_source(self, source_name: str) -> IPublisher:
+        """
+        Resolves a mapping source name to the current controller-owned publisher.
+
+        This replaces dynamic getattr(self, f"_{source_name}") calls with an explicit
+        registry. The registry is created dynamically so current_search_model cannot
+        become stale when the active search model changes.
+        """
+        sources = {
+            "extraction_document_model": self._extraction_document_model,
+            "annotation_document_model": self._annotation_document_model,
+            "comparison_model": self._comparison_model,
+            "selection_model": self._selection_model,
+            "annotation_mode_model": self._annotation_mode_model,
+            "highlight_model": self._highlight_model,
+            "current_search_model": self._current_search_model,
+            "save_state_model": self._save_state_model,
+            "layout_configuration_model": self._layout_configuration_model,
+            "project_wizard_model": self._project_wizard_model,
+            "global_settings_model": self._global_settings_model,
+            "project_settings_model": self._project_settings_model,
+            "search_model_manager": self._search_model_manager,
+        }
+        return sources.get(source_name)
+
+    def _normalize_source_mapping(self, source_mapping: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+        """
+        Normalizes either the new explicit mapping format or the legacy mapping format.
+
+        Normalized shape:
+        {
+            "observer_id": {
+                "target": "ConcreteTargetClass",
+                "needs_finalization": bool,
+                "subscriptions": [
+                    {
+                        "source": "controller_source_key",
+                        "trigger": "PublisherClassName",
+                        "keys": ["state_key"],
+                        "deregister_on_reload": bool,
+                    }
+                ]
+            }
+        }
+        """
+        if not source_mapping:
+            return {}
+
+        if all("subscriptions" in config for config in source_mapping.values()):
+            return self._normalize_explicit_source_mapping(source_mapping)
+
+        return self._normalize_legacy_source_mapping(source_mapping)
+
+    def _normalize_explicit_source_mapping(self, source_mapping: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+        """
+        Normalizes the new source_mapping format.
+        """
+        normalized_mapping = {}
+
+        for observer_id, config in source_mapping.items():
+            subscriptions = []
+            for subscription in config.get("subscriptions", []):
+                subscriptions.append({
+                    "source": subscription["source"],
+                    "trigger": subscription.get("trigger"),
+                    "keys": subscription.get("keys", []),
+                    "deregister_on_reload": subscription.get("deregister_on_reload", False),
+                })
+
+            normalized_mapping[observer_id] = {
+                "target": config.get("target", observer_id),
+                "legacy_targets": config.get("legacy_targets", []),
+                "needs_finalization": config.get("needs_finalization", False),
+                "subscriptions": subscriptions,
+            }
+
+        return normalized_mapping
+
+    def _normalize_legacy_source_mapping(self, source_mapping: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+        """
+        Converts the old class-name keyed mapping into the normalized internal format.
+        """
+        normalized_mapping = {}
+
+        for observer_name, publisher_configs in source_mapping.items():
+            observer_id = self._to_observer_id(observer_name)
+            needs_finalization = False
+            subscriptions = []
+
+            for publisher_name, config in publisher_configs.items():
+                needs_finalization = needs_finalization or config.get("needs_finalization", False)
+
+                for source_name, keys in config.get("source_keys", {}).items():
+                    subscriptions.append({
+                        "source": source_name,
+                        "trigger": publisher_name,
+                        "keys": keys,
+                        "deregister_on_reload": config.get("needs_deregistration_on_reload", False),
+                    })
+
+            normalized_mapping[observer_id] = {
+                "target": observer_name,
+                "legacy_targets": [observer_name],
+                "needs_finalization": needs_finalization,
+                "subscriptions": subscriptions,
+            }
+
+        return normalized_mapping
+
+    def _to_observer_id(self, class_name: str) -> str:
+        """
+        Converts a legacy observer class name to a stable snake_case observer id.
+        """
+        suffixes = ("Frame", "Window")
+        base_name = class_name
+        for suffix in suffixes:
+            if base_name.endswith(suffix):
+                base_name = base_name[:-len(suffix)]
+                break
+
+        result = []
+        for index, char in enumerate(base_name):
+            if char.isupper() and index > 0:
+                previous = base_name[index - 1]
+                next_char = base_name[index + 1] if index + 1 < len(base_name) else ""
+                if previous.islower() or next_char.islower():
+                    result.append("_")
+            result.append(char.lower())
+
+        return "".join(result)
 
     def cleanup_observers_for_reload(self) -> None:
         """
@@ -483,26 +632,29 @@ class Controller(IController):
 
     def _deregister_observers_for_reload(self) -> None:
         """
-        Deregisters all observers from their publishers that are marked with 'deregister_on_reload' in the source mapping.
-        Uses the same mapping logic as add_observer to ensure all relevant observer instances are removed.
+        Deregisters all observers from sources marked with deregister_on_reload.
         """
-        for observer_name, publisher_configs in self._source_mapping.items():
-            for _, config in publisher_configs.items():
-                if not config.get("needs_deregistration_on_reload", False):
-                    continue  # Skip if not marked for deregistration
+        processed_sources = []
 
-                # Get all publisher keys from source_keys (same as in add_observer)
-                source_keys = config.get("source_keys", {})
-                for publisher_key in source_keys.keys():
-                    publisher_instance = getattr(
-                        self, f"_{publisher_key}", None)
-                    if publisher_instance is None:
-                        continue
+        for observer_id, observer_config in self._source_mapping.items():
+            for subscription in observer_config["subscriptions"]:
+                if not subscription.get("deregister_on_reload", False):
+                    continue
 
-                    # Remove all observer instances of this class from the publisher
-                    for observer in publisher_instance._observers[:]:
-                        if observer.__class__.__name__ == observer_name:
-                            publisher_instance.remove_observer(observer)
+                source_name = subscription["source"]
+                publisher_instance = self._get_source(source_name)
+                if publisher_instance is None:
+                    continue
+
+                cleanup_key = (observer_id, source_name)
+                if cleanup_key in processed_sources:
+                    continue
+                processed_sources.append(cleanup_key)
+
+                observers = getattr(publisher_instance, "_observers", [])
+                for observer in observers[:]:
+                    if self._observer_matches_target(observer, observer_id, observer_config):
+                        publisher_instance.remove_observer(observer)
 
     def _remove_finalize_views_for_reload(self) -> None:
         """
