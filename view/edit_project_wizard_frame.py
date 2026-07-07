@@ -3,36 +3,51 @@ import tkinter as tk
 from tkinter import ttk
 
 from controller.interfaces import IController
-from enums.menu_pages import MenuPage
+from enums.menu_pages import MenuSubpage
 from observer.interfaces import IPublisher
 from view.new_project_wizard_frame import NewProjectWizardFrame
 
 
-class EditProjectWizardFrame(NewProjectWizardFrame):
+class EditProjectWizardFrame(ttk.Frame):
     """
-    A specialized version of the ProjectWizard used for editing existing projects.
-    Adds an initial page for selecting a project from a list and adapts labels to reflect editing.
+    A project wizard used for editing existing projects.
+
+    This class composes NewProjectWizardFrame for the shared wizard pages and
+    adds one extra page for selecting the project to edit.
     """
+
+    observer_id = "edit_project_wizard"
 
     def __init__(self, controller: IController, master=None, parent_window: tk.Toplevel = None) -> None:
+        super().__init__(master)
+        self._controller = controller
+        self._parent_window = parent_window
+        self._available_projects: List[str] = []
+        self._selected_project: str | None = None
+        self._project_data: dict = {}
 
-        super().__init__(controller=controller, master=master, parent_window=parent_window)
-        self._available_projects = []
-        self._selected_project = None
+        self._wizard = NewProjectWizardFrame(
+            controller=controller,
+            master=self,
+            parent_window=parent_window,
+            register_as_observer=False,
+        )
+        self._wizard.pack(expand=True, fill="both")
 
-        # Add selection page at the beginning
+        # Keep local aliases for the composed wizard internals that this wrapper customizes.
+        self._notebook = self._wizard._notebook
+
         self._init_page_project_selection()
         self._notebook.insert(
             0, self._page_project_selection, text="Choose Project")
         self._notebook.select(0)
 
-        # Update tab labels
         self._notebook.tab(1, text="Edit Project Name")
         self._notebook.tab(2, text="Edit Tags")
         self._notebook.tab(3, text="Edit Tag Groups")
 
-        # Update last button label from "Finish" to "Edit Project"
         self._replace_finish_button()
+        self._controller.add_observer(self)
 
     def _init_page_project_selection(self) -> None:
         """Initializes the first page for selecting an existing project."""
@@ -66,8 +81,6 @@ class EditProjectWizardFrame(NewProjectWizardFrame):
         self._selected_project = self._listbox_projects.get(selected[0])
         self._controller.perform_load_project_data_for_editing(
             self._selected_project)
-
-        # Move to next tab
         self._notebook.select(1)
 
     def _replace_finish_button(self) -> None:
@@ -80,6 +93,7 @@ class EditProjectWizardFrame(NewProjectWizardFrame):
 
     def _populate_projects_listbox(self, projects: List[str]) -> None:
         """Populates the projects listbox with the given project names.
+
         Args:
             projects (List[str]): List of project names to display.
         """
@@ -92,19 +106,59 @@ class EditProjectWizardFrame(NewProjectWizardFrame):
     def update(self, publisher: IPublisher) -> None:
         """
         Updates the wizard state based on the current project data.
-        This method is called when the controller notifies observers of changes.
+
+        Args:
+            publisher (IPublisher): The publisher notifying about the update.
         """
-        super().update(publisher)
         state = self._controller.get_observer_state(
             observer=self, publisher=publisher)
+        self._project_data = dict(state)
+        self._wizard.apply_state(state)
+
         projects = state.get("projects", [])
         project_names = [project["name"] for project in projects]
         self._populate_projects_listbox(project_names)
 
+    def select_subtab(self, subtab: MenuSubpage) -> None:
+        """
+        Selects a project-editing subtab on the composed wizard.
+
+        Args:
+            subtab (MenuSubpage): The subtab to select.
+        """
+        self._wizard.select_subtab(subtab)
+
     def _on_button_pressed_edit_project(self) -> None:
         """
         Handles the 'Edit Project' button press.
-        Validates and completes the project data, then instructs the controller to save changes.
         """
+        current_page_data = self._wizard._collect_current_page_data()
+        self._project_data.update(current_page_data)
+        self._controller.perform_project_update_project_data(current_page_data)
         self._controller.perform_project_edit_project(
             self._selected_project, self._project_data)
+
+    def destroy(self) -> None:
+        """
+        Cleans up the observer before destroying the widget.
+        """
+        self._controller.remove_observer(self)
+        super().destroy()
+
+    def get_observer_id(self) -> str:
+        """
+        Returns the stable observer identifier used by the source mapping.
+
+        Returns:
+            str: The observer identifier.
+        """
+        return self.observer_id
+
+    def is_static_observer(self) -> bool:
+        """
+        Returns whether this observer must resolve state from static controller sources.
+
+        Returns:
+            bool: False for the edit project wizard.
+        """
+        return False

@@ -4,10 +4,10 @@ from tkinter import ttk
 
 from controller.interfaces import IController
 from enums.menu_pages import MenuSubpage
-from observer.interfaces import IObserver, IPublisher
+from observer.interfaces import IPublisher
 
 
-class NewProjectWizardFrame(ttk.Frame, IObserver):
+class NewProjectWizardFrame(ttk.Frame):
     """
     A multi-step wizard widget used to create or edit a project.
 
@@ -18,24 +18,25 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         3. Tag group definition.
 
     Optionally, initial project data can be passed during construction or later via `set_project_data`.
-
-    Attributes:
-        _notebook (ttk.Notebook): The internal notebook managing the wizard pages.
-        _entry_project_name (tk.Entry): Entry widget for the project name.
-        _available_tags (list[str]): List of tags available for selection.
-        _listbox_tag_selection (tk.Listbox): Listbox for selecting tags for the project.
-        _entry_tag_group_file_name (tk.Entry): Entry for the tag group file name.
-        _entry_tag_group_name (tk.Entry): Entry for the current tag group name.
-        _listbox_tags_for_group (tk.Listbox): Listbox for selecting tags to include in a group.
-        _listbox_created_groups (tk.Listbox): Listbox displaying created tag groups.
     """
 
-    def __init__(self, controller: IController,  parent_window: tk.Toplevel = None, master=None, project_data: dict = None) -> None:
+    observer_id = "new_project_wizard"
+
+    def __init__(
+        self,
+        controller: IController,
+        parent_window: tk.Toplevel = None,
+        master=None,
+        project_data: dict = None,
+        register_as_observer: bool = True,
+    ) -> None:
         super().__init__(master)
         self._parent_window = parent_window
-
         self._controller = controller
-        self._controller.add_observer(self)
+        self._register_as_observer = register_as_observer
+
+        if self._register_as_observer:
+            self._controller.add_observer(self)
 
         self._notebook = ttk.Notebook(self)
         self._notebook.pack(expand=True, fill="both")
@@ -61,11 +62,8 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         self._entry_project_name.grid(
             row=0, column=1, padx=10, pady=10, sticky="ew")
         self._page_project_name.columnconfigure(1, weight=1)
-        # Fill row=1 with weight so it takes up vertical space
         self._page_project_name.rowconfigure(1, weight=1)
 
-        # Navigation buttons (Back hidden)
-        # Place the button in the bottom row
         ttk.Button(self._page_project_name, text="Next", command=self._on_button_pressed_next_tab).grid(
             row=2, column=1, sticky="e", padx=10, pady=10
         )
@@ -75,7 +73,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         self._page_tag_selection = ttk.Frame(self._notebook)
         self._notebook.add(self._page_tag_selection, text="Select Tags")
 
-        # Content frame for both listboxes
         content_frame = ttk.Frame(self._page_tag_selection)
         content_frame.grid(row=0, column=0, columnspan=3,
                            sticky="nsew", padx=10, pady=5)
@@ -83,7 +80,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         content_frame.columnconfigure(1, weight=1)
         content_frame.rowconfigure(0, weight=1)
 
-        # Frame for available tags (left)
         tag_select_frame = ttk.Frame(content_frame)
         tag_select_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
         ttk.Label(tag_select_frame, text="Available Tags:").pack(anchor="w")
@@ -94,7 +90,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             anchor="w", pady=5
         )
 
-        # Frame for selected tags (right)
         selected_tag_frame = ttk.Frame(content_frame)
         selected_tag_frame.grid(row=0, column=1, sticky="nsew")
         ttk.Label(selected_tag_frame, text="Selected Tags:").pack(anchor="w")
@@ -104,7 +99,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             anchor="e", pady=5
         )
 
-        # Navigation buttons
         ttk.Button(self._page_tag_selection, text="Back", command=self._on_button_pressed_previous_tab).grid(
             row=1, column=0, sticky="w", padx=10, pady=10
         )
@@ -112,7 +106,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             row=1, column=2, sticky="e", padx=10, pady=10
         )
 
-        # Configure layout
         self._page_tag_selection.columnconfigure(0, weight=1)
         self._page_tag_selection.columnconfigure(1, weight=1)
         self._page_tag_selection.columnconfigure(2, weight=1)
@@ -123,7 +116,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         self._page_tag_groups = ttk.Frame(self._notebook)
         self._notebook.add(self._page_tag_groups, text="Tag Groups")
 
-        # Frame for file name and group name entries
         entry_frame = ttk.Frame(self._page_tag_groups)
         entry_frame.grid(row=0, column=0, columnspan=3,
                          sticky="ew", padx=10, pady=5)
@@ -141,7 +133,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         self._entry_tag_group_name.grid(
             row=1, column=1, sticky="ew", padx=5, pady=2)
 
-        # Frame for tag selection and tag group display
         content_frame = ttk.Frame(self._page_tag_groups)
         content_frame.grid(row=1, column=0, columnspan=3,
                            sticky="nsew", padx=10, pady=5)
@@ -149,7 +140,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         content_frame.columnconfigure(1, weight=1)
         content_frame.rowconfigure(0, weight=1)
 
-        # Tag selection (left column)
         tag_select_frame = ttk.Frame(content_frame)
         tag_select_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
         ttk.Label(tag_select_frame, text="Select Tags for Group:").pack(
@@ -158,7 +148,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             tag_select_frame, selectmode=tk.MULTIPLE)
         self._listbox_tags_for_group.pack(fill="both", expand=True)
 
-        # Treeview for created groups (right column)
         group_display_frame = ttk.Frame(content_frame)
         group_display_frame.grid(row=0, column=1, sticky="nsew")
         ttk.Label(group_display_frame,
@@ -167,7 +156,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             group_display_frame, show="tree")
         self._tree_created_groups.pack(fill="both", expand=True)
 
-        # Action buttons
         ttk.Button(self._page_tag_groups, text="Add Tag Group", command=self._on_button_pressed_add_tag_group).grid(
             row=2, column=0, sticky="w", padx=10, pady=5)
         right_action_frame = ttk.Frame(self._page_tag_groups)
@@ -176,13 +164,11 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         ttk.Button(right_action_frame, text="Tag down", command=self._on_button_pressed_tag_down).pack(side="left")
         ttk.Button(right_action_frame, text="Delete Tag Group", command=self._on_button_pressed_delete_tag_group).pack(side="left")
 
-        # Navigation buttons
         ttk.Button(self._page_tag_groups, text="Back", command=self._on_button_pressed_previous_tab).grid(
             row=3, column=0, sticky="w", padx=10, pady=10)
         ttk.Button(self._page_tag_groups, text="Finish", command=self._on_button_pressed_finish).grid(
             row=3, column=2, sticky="e", padx=10, pady=10)
 
-        # Configure overall layout
         self._page_tag_groups.columnconfigure(0, weight=1)
         self._page_tag_groups.columnconfigure(1, weight=1)
         self._page_tag_groups.columnconfigure(2, weight=1)
@@ -197,11 +183,18 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         """
         state = self._controller.get_observer_state(
             observer=self, publisher=publisher)
-        # Project name
+        self.apply_state(state)
+
+    def apply_state(self, state: dict) -> None:
+        """
+        Applies project wizard state to the widget without requesting it from the controller.
+
+        This allows wrapper widgets, such as EditProjectWizardFrame, to compose this
+        class while remaining the registered observer themselves.
+        """
         self._entry_project_name.delete(0, tk.END)
         self._entry_project_name.insert(0, state.get("project_name", ""))
 
-        # Tags
         self._populate_listbox(
             listbox=self._listbox_available_tags, items=state.get("locally_available_tags", []))
         self._populate_listbox(
@@ -209,10 +202,9 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         self._populate_listbox(
             listbox=self._listbox_tags_for_group, items=state.get("selected_tags", []))
 
-        # Tag groups
         tag_groups = state.get("tag_groups", {})
         self._populate_tag_group_tree(tag_groups)
-        # File name for tag groups
+
         self._entry_tag_group_file_name.delete(0, tk.END)
         self._entry_tag_group_file_name.insert(
             0, state.get("tag_group_file_name", ""))
@@ -236,12 +228,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
     def _collect_current_page_data(self) -> dict:
         """
         Collects data from the current page to update the model.
-        Returns:
-            dict: A dictionary containing the data from the current page. The keys depend on the current page:
-                - Page 0 (Project Name): {'project_name': str}
-                - Page 1 (Tag Selection): {'selected_tags': List[str]}
-                - Page 2 (Tag Groups): {'tag_group_file_name': str, 'tag_groups': Dict[str, List[str]]}
-
         """
         current_tab = self._notebook.select()
         data = {}
@@ -253,7 +239,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             data["selected_tags"] = selected_tags
         elif current_tab == str(self._page_tag_groups):
             data["tag_group_file_name"] = self._entry_tag_group_file_name.get().strip()
-            # Collect tag groups from the treeview
             tag_groups = {}
             for parent_id in self._tree_created_groups.get_children():
                 group_name = self._tree_created_groups.item(parent_id, "text")
@@ -272,7 +257,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         if not group_name:
             tk.messagebox.showerror(
                 "Error", "Tag group name cannot be empty.", parent=self)
-            # self._notebook.select(-1)
             return
 
         selected_tags = [self._listbox_tags_for_group.get(i)
@@ -280,7 +264,6 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         if not selected_tags:
             tk.messagebox.showerror(
                 "Error", "No tags selected for the group.", parent=self)
-            # self._notebook.select(-1)
             return
 
         new_group = {"name": group_name, "tags": selected_tags}
@@ -329,11 +312,12 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
 
     def _on_button_pressed_finish(self) -> None:
         """
-        Finalizes the project creation or editing process.
-        This method should gather all data and notify the controller.
+        Finalizes the project creation process.
         """
+        current_page_data = self._collect_current_page_data()
+        self._controller.perform_project_update_project_data(current_page_data)
         success = self._controller.perform_project_create_new_project()
-        if success:
+        if success and self._parent_window:
             self._parent_window.destroy()
 
     def _on_button_pressed_next_tab(self) -> None:
@@ -396,20 +380,17 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         item_id = selected_ids[0]
         parent_id = self._tree_created_groups.parent(item_id)
         if parent_id == "":
-            return  # Not a tag
+            return
         siblings = list(self._tree_created_groups.get_children(parent_id))
         idx = siblings.index(item_id)
         if idx == 0:
-            return  # Already at top
-        # Capture stable identifiers
+            return
         group_name = self._tree_created_groups.item(parent_id, "text")
         tag_text = self._tree_created_groups.item(item_id, "text")
         new_idx = idx - 1
         self._tree_created_groups.move(item_id, parent_id, new_idx)
-        # Persist
         tag_groups = self._build_tag_groups_from_tree()
         self._controller.perform_project_update_project_data({"tag_groups": tag_groups})
-        # Restore selection
         self._try_restore_tree_selection(group_name, tag_text)
 
     def _on_button_pressed_tag_down(self) -> None:
@@ -422,20 +403,17 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
         item_id = selected_ids[0]
         parent_id = self._tree_created_groups.parent(item_id)
         if parent_id == "":
-            return  # Not a tag
+            return
         siblings = list(self._tree_created_groups.get_children(parent_id))
         idx = siblings.index(item_id)
         if idx == len(siblings) - 1:
-            return  # Already at bottom
-        # Capture stable identifiers
+            return
         group_name = self._tree_created_groups.item(parent_id, "text")
         tag_text = self._tree_created_groups.item(item_id, "text")
         new_idx = idx + 1
         self._tree_created_groups.move(item_id, parent_id, new_idx)
-        # Persist
         tag_groups = self._build_tag_groups_from_tree()
         self._controller.perform_project_update_project_data({"tag_groups": tag_groups})
-        # Restore selection
         self._try_restore_tree_selection(group_name, tag_text)
 
     def _build_tag_groups_from_tree(self) -> dict[str, list[str]]:
@@ -461,23 +439,22 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             tag_text: The text of the tag.
         """
         try:
-            # Find group
             for p_id in self._tree_created_groups.get_children():
                 if self._tree_created_groups.item(p_id, "text") == group_name:
-                    # Find tag
                     for c_id in self._tree_created_groups.get_children(p_id):
                         if self._tree_created_groups.item(c_id, "text") == tag_text:
                             self._tree_created_groups.selection_set(c_id)
                             self._tree_created_groups.see(c_id)
                             return
         except tk.TclError:
-            pass  # Silently ignore if item not found or other Tcl error
+            pass
 
     def destroy(self) -> None:
         """
         Cleans up the observer before destroying the window.
         """
-        self._controller.remove_observer(self)
+        if self._register_as_observer:
+            self._controller.remove_observer(self)
         super().destroy()
 
     def get_observer_id(self) -> str:
@@ -488,3 +465,12 @@ class NewProjectWizardFrame(ttk.Frame, IObserver):
             str: The observer identifier.
         """
         return self.observer_id
+
+    def is_static_observer(self) -> bool:
+        """
+        Returns whether this observer must resolve state from static controller sources.
+
+        Returns:
+            bool: False for the project wizard.
+        """
+        return False
