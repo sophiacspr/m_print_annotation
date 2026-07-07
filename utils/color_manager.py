@@ -103,6 +103,8 @@ class ColorManager:
         color_scheme = {}
 
         palette_size = len(palette)
+        if not tag_keys:
+            raise ValueError("At least one tag key is required.")
         num_tags = len(tag_keys)
         step = max(palette_size // num_tags, 1)
 
