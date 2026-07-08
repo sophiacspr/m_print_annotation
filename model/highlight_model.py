@@ -41,6 +41,22 @@ class HighlightModel(IPublisher):
         if notify:
             self.notify_observers()
 
+    def set_highlights(
+        self,
+        tag_highlights: list[tuple[str, str, int, int]],
+        search_highlights: list[tuple[str, str, int, int]],
+    ) -> None:
+        """
+        Sets the highlights for both tags and searches, replacing any existing highlights.
+        Args:
+            tag_highlights (list[tuple[str, str, int, int]]): A list of tag highlights, each as a tuple of (color, start_position, end_position).
+            search_highlights (list[tuple[str, str, int, int]]): A list of search highlights, each as a tuple of (color, start_position, end_position).
+        """
+
+        self._tag_highlights = tag_highlights
+        self._search_highlights = search_highlights
+        self.notify_observers()
+
     def add_tag_highlights(self, highlights: List[Tuple[str, int, int]]) -> None:
         """
         Replaces the current tag highlights with a new set.
