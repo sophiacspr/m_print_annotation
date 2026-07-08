@@ -6,6 +6,7 @@
     "source_mapping": "app_data/app/config/source_mapping.json",
     "project_template": "app_data/app/resources/project_template.json",
     "color_sets": "app_data/app/resources/color_sets.json",
+    "highlight_theme_directory": "app_data/app/resources/highlight_themes/",
     "last_project": "app_data/app/state/last_project.json",
     "app_database_sources": "app_data/app/databases/sources/",
     "app_database_registries": "app_data/app/databases/registries/",

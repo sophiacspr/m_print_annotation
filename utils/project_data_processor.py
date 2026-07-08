@@ -242,11 +242,9 @@ class ProjectDataProcessor:
         tag_keys = [tag["name"]
                     for tag in self._project_data.get("selected_tags", [])]
         colorset_name = "magma"
-        complementary_search_color = True
         color_scheme_data = self._controller.perform_create_color_scheme(
             tag_keys=tag_keys,
             colorset_name=colorset_name,
-            complementary_search_color=complementary_search_color,
             should_write_file=False
         )
         self._project_data["color_scheme_data"] = color_scheme_data
