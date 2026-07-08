@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QTextCursor
-from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
+from PySide6.QtGui import QTextCharFormat, QTextCursor
+from PySide6.QtWidgets import QPlainTextEdit, QScrollBar, QVBoxLayout, QWidget
 
 from viewmodel.text_display_view_model import TextDisplayViewModel
 
@@ -49,14 +49,76 @@ class TextDisplayWidget(QWidget):
     def text_widget(self) -> QPlainTextEdit:
         return self.text_edit
 
-    def render_text(self, text: str) -> None:
-        cursor_position = self.text_edit.textCursor().position()
+    def render_text(self, text: str, *, preserve_scroll: bool | None = None) -> None:
+        """
+        Renders text while optionally preserving the current viewport position.
+
+        Args:
+            text: Text to display.
+            preserve_scroll: If True, keep the current vertical/horizontal scroll position.
+                If False, reset the viewport to the top. If None, the decision is read
+                from the view model.
+        """
+        new_text = text or ""
+        if self.text_edit.toPlainText() == new_text:
+            return
+
+        should_preserve_scroll = (
+            self._view_model.should_preserve_scroll
+            if preserve_scroll is None
+            else preserve_scroll
+        )
+
+        vertical_bar = self.text_edit.verticalScrollBar()
+        horizontal_bar = self.text_edit.horizontalScrollBar()
+        old_vertical_value = vertical_bar.value()
+        old_horizontal_value = horizontal_bar.value()
+        old_cursor_position = self.text_edit.textCursor().position()
+
         self._internal_update = True
-        self.text_edit.setPlainText(text or "")
-        cursor = self.text_edit.textCursor()
-        cursor.setPosition(min(cursor_position, len(self.text_edit.toPlainText())))
+        previous_signal_state = self.text_edit.blockSignals(True)
+
+        try:
+            self._clear_text_formatting()
+            self.text_edit.setPlainText(new_text)
+            self._clear_text_formatting()
+
+            cursor = self.text_edit.textCursor()
+            if should_preserve_scroll:
+                cursor.setPosition(min(old_cursor_position, len(new_text)))
+            else:
+                cursor.setPosition(0)
+            self.text_edit.setTextCursor(cursor)
+
+            if should_preserve_scroll:
+                self._set_scrollbar_value(vertical_bar, old_vertical_value)
+                self._set_scrollbar_value(horizontal_bar, old_horizontal_value)
+                QTimer.singleShot(
+                    0,
+                    lambda: self._restore_scroll_position(
+                        vertical_bar,
+                        old_vertical_value,
+                        horizontal_bar,
+                        old_horizontal_value,
+                    ),
+                )
+            else:
+                self._set_scrollbar_value(vertical_bar, 0)
+                self._set_scrollbar_value(horizontal_bar, 0)
+                QTimer.singleShot(0, lambda: self._restore_scroll_position(vertical_bar, 0, horizontal_bar, 0))
+        finally:
+            self.text_edit.blockSignals(previous_signal_state)
+            self._internal_update = False
+
+
+    def _clear_text_formatting(self) -> None:
+        """Clears embedded QTextDocument formatting and transient selections."""
+        self.text_edit.setExtraSelections([])
+        cursor = QTextCursor(self.text_edit.document())
+        cursor.select(QTextCursor.SelectionType.Document)
+        cursor.setCharFormat(QTextCharFormat())
+        cursor.clearSelection()
         self.text_edit.setTextCursor(cursor)
-        self._internal_update = False
 
     def disable_selection(self) -> None:
         self.text_edit.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
@@ -65,7 +127,25 @@ class TextDisplayWidget(QWidget):
         if self._view_model.is_typing:
             return
         self._view_model.update_for_observer(observer, publisher)
-        self.render_text(self._view_model.text)
+        self.render_text(
+            self._view_model.text,
+            preserve_scroll=self._view_model.should_preserve_scroll,
+        )
+
+    def _restore_scroll_position(
+        self,
+        vertical_bar: QScrollBar,
+        vertical_value: int,
+        horizontal_bar: QScrollBar,
+        horizontal_value: int,
+    ) -> None:
+        """Restores scrollbars after Qt has recalculated the document layout."""
+        self._set_scrollbar_value(vertical_bar, vertical_value)
+        self._set_scrollbar_value(horizontal_bar, horizontal_value)
+
+    def _set_scrollbar_value(self, scrollbar: QScrollBar, value: int) -> None:
+        """Sets a scrollbar value clamped to its current valid range."""
+        scrollbar.setValue(max(scrollbar.minimum(), min(value, scrollbar.maximum())))
 
     def _on_text_changed(self) -> None:
         if self._internal_update or not self._editable:

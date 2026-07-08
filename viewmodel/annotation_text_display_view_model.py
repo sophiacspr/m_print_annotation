@@ -30,6 +30,11 @@ class AnnotationTextDisplayViewModel(TextDisplayViewModel):
 
     def apply_state(self, state: dict[str, Any], publisher: Any = None) -> None:
         super().apply_state(state, publisher)
+
+        if self.did_replace_text:
+            self.tag_highlight_data = []
+            self.search_highlight_data = []
+
         if "tag_highlight_data" in state:
             self.tag_highlight_data = state.get("tag_highlight_data", [])
         if "search_highlight_data" in state:

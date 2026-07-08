@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from commands.add_tag_command import AddTagCommand
 from commands.adopt_annotation_command import AdoptAnnotationCommand
 from commands.delete_tag_command import DeleteTagCommand
@@ -114,6 +116,16 @@ class Controller(IController):
         self._document_source_mapping = {"extraction": self._extraction_document_model,
                                          "annotation": self._annotation_document_model,
                                          "comparison": self._comparison_model}
+
+        # Text rendering policy for ViewModels.
+        #
+        # None means: do not send an explicit scroll instruction. The TextDisplayViewModel
+        # can then use its own fallback behavior.
+        #
+        # False is used while loading/replacing documents: text views should reset to top.
+        # True is used while mutating the current document, e.g. tag operations:
+        # text views should preserve the current scroll position.
+        self._text_scroll_should_preserve: bool | None = None
 
     # decorators
     def invalidate_search_models(method):
@@ -263,7 +275,8 @@ class Controller(IController):
         if caller_id in self._undo_redo_models:
             model = self._undo_redo_models[caller_id]
             model.execute_command(command)
-            command.execute()
+            with self._text_scroll_policy(True):
+                command.execute()
 
     @with_highlight_update
     @invalidate_search_models
@@ -284,7 +297,8 @@ class Controller(IController):
             model = self._undo_redo_models[caller_id]
             command = model.undo_command()
             if command:
-                command.undo()
+                with self._text_scroll_policy(True):
+                    command.undo()
 
     @with_highlight_update
     @invalidate_search_models
@@ -305,7 +319,8 @@ class Controller(IController):
             model = self._undo_redo_models[caller_id]
             command = model.redo_command()
             if command:
-                command.redo()
+                with self._text_scroll_policy(True):
+                    command.redo()
 
     # observer pattern
 
@@ -481,15 +496,70 @@ class Controller(IController):
         """
         Projects selected state keys from one publisher.
         """
-        projected_state = {}
+        projected_state: Dict[str, Any] = {}
         source_state = source.get_state()
 
+        should_preserve_scroll = getattr(
+            self,
+            "_text_scroll_should_preserve",
+            False,
+        )
+
         for key in keys:
+            if key in {"should_preserve_scroll", "preserve_scroll_position"}:
+                projected_state[key] = should_preserve_scroll
+                continue
+
+            if key == "reset_scroll_position":
+                projected_state[key] = not should_preserve_scroll
+                continue
+
             value = source_state.get(key)
             if value is not None:
                 projected_state[key] = value
 
         return projected_state
+
+    def _add_text_scroll_policy_state(self, observer: IObserver, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Adds an explicit text-scroll policy to text-display observer state.
+
+        The actual scroll preservation is implemented by the frontend widget. The
+        controller only tells the ViewModel whether the current text update should
+        preserve the existing viewport or reset it to the top.
+        """
+        if "text" not in state:
+            return state
+
+        observer_id = self._get_observer_id(observer)
+        if observer_id not in {"preview_text_display", "annotation_text_display"}:
+            return state
+
+        should_preserve = getattr(self, "_text_scroll_should_preserve", None)
+        if should_preserve is None:
+            return state
+        state["should_preserve_scroll"] = should_preserve
+        state["preserve_scroll_position"] = should_preserve
+        state["reset_scroll_position"] = not should_preserve
+        return state
+
+    @contextmanager
+    def _text_scroll_policy(self, should_preserve_scroll: bool):
+        """
+        Temporarily configures how text display widgets should handle scroll
+        position for text updates triggered inside the context.
+
+        Args:
+            should_preserve_scroll (bool): True keeps the visible viewport stable.
+                False resets the text display to the top, which is appropriate for
+                newly loaded/replaced documents.
+        """
+        previous_policy = getattr(self, "_text_scroll_should_preserve", None)
+        self._text_scroll_should_preserve = should_preserve_scroll
+        try:
+            yield
+        finally:
+            self._text_scroll_should_preserve = previous_policy
 
     def _get_source(self, source_name: str) -> IPublisher:
         """
@@ -1212,7 +1282,8 @@ class Controller(IController):
             "text": extracted_text
         }
 
-        self._extraction_document_model.set_document(document)
+        with self._text_scroll_policy(False):
+            self._extraction_document_model.set_document(document)
 
     def perform_text_adoption(self) -> None:
         """
@@ -1235,7 +1306,8 @@ class Controller(IController):
         Updates:
             - The text in the preview document model is updated, and its observers are notified.
         """
-        self._extraction_document_model.set_text(text)
+        with self._text_scroll_policy(True):
+            self._extraction_document_model.set_text(text)
 
     def perform_update_meta_tags(self, tag_strings: Dict[str, str]) -> None:
         """
@@ -1429,8 +1501,9 @@ class Controller(IController):
             if len(document_data) != 1:
                 raise ValueError(
                     "Too many files selected: Only one file path is allowed when loading a predefined annotation model.")
-            self._annotation_document_model.set_document(document_data[0]["document"])
-            self._annotation_document_model.set_tags(document_data[0]["tags"])
+            with self._text_scroll_policy(False):
+                self._annotation_document_model.set_document(document_data[0]["document"])
+                self._annotation_document_model.set_tags(document_data[0]["tags"])
 
         # Load stored comparison_model or set up a new one from multiple documents
         if self._active_view_id == "comparison":
@@ -1438,9 +1511,11 @@ class Controller(IController):
                 if len(documents) > 1:
                     raise ValueError(
                         "Too many files selected: Only one file path is allowed when loading a predefined comparison model.")
-                self._load_comparison_model(documents[0])
+                with self._text_scroll_policy(False):
+                    self._load_comparison_model(documents[0])
             else:
-                self._setup_comparison_model(documents)
+                with self._text_scroll_policy(False):
+                    self._setup_comparison_model(documents)
         self._save_state_model.reset_key(self._active_view_id)
 
     def perform_save(self, file_path: str = None, view_id: str = None) -> None:
@@ -1564,7 +1639,8 @@ class Controller(IController):
             "meta_tags": document.get("meta_tags", {}),
             "text": document.get("text", ""),
         }
-        self._annotation_document_model.set_document(save_document)
+        with self._text_scroll_policy(False):
+            self._annotation_document_model.set_document(save_document)
         self._file_handler.write_file(file_path, save_document)
         return
 
@@ -1750,7 +1826,8 @@ class Controller(IController):
         sentences = sentence_func()
         tags = [[TagModel(tag_data) for tag_data in self._tag_processor._extract_tags_from_text(
             sentence)] for sentence in sentences]
-        self._comparison_model.update_documents(sentences, tags)
+        with self._text_scroll_policy(False):
+            self._comparison_model.update_documents(sentences, tags)
 
     def perform_adopt_annotation(self, adoption_index: int) -> None:
         """
@@ -1992,6 +2069,30 @@ class Controller(IController):
 
         return []
 
+
+    def _clear_highlight_model(self, highlight_model: IPublisher) -> None:
+        """
+        Clears stale highlight state before recomputing highlights.
+
+        Highlight data belongs to the currently loaded document. When another
+        document is loaded, old tag ranges must not remain in the highlight
+        model, otherwise a later render can apply stale ranges to the new text.
+        """
+        reset_method = getattr(highlight_model, "reset", None)
+        if callable(reset_method):
+            reset_method()
+            return
+
+        clear_method_names = (
+            "clear_highlights",
+            "clear_tag_highlights",
+            "clear_search_highlights",
+        )
+        for method_name in clear_method_names:
+            clear_method = getattr(highlight_model, method_name, None)
+            if callable(clear_method):
+                clear_method()
+
     def _update_highlight_model(self) -> None:
         """
         Updates the highlight model with tag and search highlights based on the current active view.
@@ -2008,10 +2109,17 @@ class Controller(IController):
             highlight_models = comparison_model.get_highlight_models()
 
         for document_model, highlight_model in zip(document_models, highlight_models):
-            highlight_data = self._tag_manager.get_highlight_data(
-                document_model)
-            tag_highlights = [(color_scheme["tags"][tag]["background_color"], color_scheme["tags"][tag]["font_color"], start, end) for tag, start, end in highlight_data
-                              ]
+            self._clear_highlight_model(highlight_model)
+            highlight_data = self._tag_manager.get_highlight_data(document_model)
+            tag_highlights = [
+                (
+                    color_scheme["tags"][tag]["background_color"],
+                    color_scheme["tags"][tag]["font_color"],
+                    start,
+                    end,
+                )
+                for tag, start, end in highlight_data
+            ]
             highlight_model.add_tag_highlights(tag_highlights)
 
         if not self._current_search_model:
