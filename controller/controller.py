@@ -38,10 +38,10 @@ from utils.settings_manager import SettingsManager
 from utils.suggestion_manager import SuggestionManager
 from utils.tag_manager import TagManager
 from utils.tag_processor import TagProcessor
-from view.interfaces import IComparisonView, IView
+from frontend_tkinter.interfaces import IComparisonView, IView
 import tkinter.messagebox as mbox
 
-from view.main_window import MainWindow
+from frontend_tkinter.main_window import MainWindow
 
 
 class Controller(IController):

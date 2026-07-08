@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
-from view.meta_tags_frame import MetaTagsFrame
-from view.extraction_frame import ExtractionFrame
-from view.preview_text_display_frame import PreviewTextDisplayFrame
-from view.search_frame import SearchFrame
-from view.view import ViewBehavior
-from view.interfaces import IView
+from frontend_tkinter.meta_tags_frame import MetaTagsFrame
+from frontend_tkinter.extraction_frame import ExtractionFrame
+from frontend_tkinter.preview_text_display_frame import PreviewTextDisplayFrame
+from frontend_tkinter.search_frame import SearchFrame
+from frontend_tkinter.view import ViewBehavior
+from frontend_tkinter.interfaces import IView
 
 
 class ExtractionView(tk.Frame, IView):

@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
 from enums.menu_pages import MenuPage
-from view.global_settings import GlobalSettings
-from view.project_settings import ProjectSettings
+from frontend_tkinter.global_settings import GlobalSettings
+from frontend_tkinter.project_settings import ProjectSettings
 
 
 class SettingsWindow(tk.Toplevel):

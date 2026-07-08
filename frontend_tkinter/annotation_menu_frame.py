@@ -3,8 +3,8 @@ from tkinter import ttk
 from typing import Dict, List
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
-from view.annotation_tag_frame import AnnotationTagFrame
-from view.interfaces import IAnnotationMenuFrame
+from frontend_tkinter.annotation_tag_frame import AnnotationTagFrame
+from frontend_tkinter.interfaces import IAnnotationMenuFrame
 from viewmodel.annotation_menu_view_model import AnnotationMenuViewModel
 
 

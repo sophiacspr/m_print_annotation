@@ -1,4 +1,3 @@
-
 from controller.controller import Controller
 from model.annotation_document_model import AnnotationDocumentModel
 from model.annotation_mode_model import AnnotationModeModel
@@ -11,19 +10,23 @@ from model.project_settings_model import ProjectSettingsModel
 from model.project_wizard_model import ProjectWizardModel
 from model.save_state_model import SaveStateModel
 from model.selection_model import SelectionModel
-from view.main_window import MainWindow
 
 
 class AppBuilder:
-    def build_app(self) -> MainWindow:
+    """
+    Builds the application controller and starts the selected frontend.
+    """
+
+    def build_controller(self) -> Controller:
         """
-        Build the main application window.
+        Builds all models and the shared controller.
+
         Returns:
-            MainWindow: The main application window instance.
+            Controller: The initialized application controller.
         """
-        # Initialize model and controller
         print("######### START INIT ###########")
         print("Initializing models")
+
         preview_document_model = ExtractionDocumentModel()
         annotation_document_model = AnnotationDocumentModel()
         comparison_model = ComparisonModel()
@@ -37,11 +40,64 @@ class AppBuilder:
         project_settings_model = ProjectSettingsModel()
 
         print("Creating controller")
+
         controller = Controller(
-            preview_document_model=preview_document_model, annotation_document_model=annotation_document_model,  comparison_model=comparison_model, selection_model=selection_model, layout_configuration_model=configuration_model, annotation_mode_model=annotation_mode_model, highlight_model=highlight_model, save_state_model=save_state_model, project_wizard_model=project_wizard_model, global_settings_model=global_settings_model, project_settings_model=project_settings_model)
-        print("Initializing views")
+            preview_document_model=preview_document_model,
+            annotation_document_model=annotation_document_model,
+            comparison_model=comparison_model,
+            selection_model=selection_model,
+            layout_configuration_model=configuration_model,
+            annotation_mode_model=annotation_mode_model,
+            highlight_model=highlight_model,
+            save_state_model=save_state_model,
+            project_wizard_model=project_wizard_model,
+            global_settings_model=global_settings_model,
+            project_settings_model=project_settings_model,
+        )
+
+        return controller
+
+    def build_tkinter_app(self):
+        """
+        Builds the Tkinter frontend.
+
+        Returns:
+            MainWindow: The Tkinter main window.
+        """
+        from frontend_tkinter.main_window import MainWindow
+
+        controller = self.build_controller()
+
+        print("Initializing Tkinter views")
         app_view = MainWindow(controller)
+
         print("Finalizing controller")
         controller.perform_project_load_project()
+
         print("######### END INIT ###########")
+
         return app_view
+
+    def run_tkinter_app(self) -> None:
+        """
+        Starts the Tkinter frontend.
+        """
+        app_view = self.build_tkinter_app()
+        app_view.mainloop()
+
+    def run_pyside_app(self) -> None:
+        """
+        Starts the PySide6 frontend.
+        """
+        from frontend_pyside.app import run
+
+        controller = self.build_controller()
+
+        print("Initializing PySide6 views")
+
+        print("Finalizing controller")
+        controller.perform_project_load_project()
+
+        print("######### END INIT ###########")
+
+        run(controller)

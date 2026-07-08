@@ -3,12 +3,12 @@ import tkinter as tk
 from tkinter import ttk
 
 from controller.interfaces import IController
-from view.annotation_menu_frame import AnnotationMenuFrame
-from view.comparison_header_frame import ComparisonHeaderFrame
-from view.comparison_text_displays import ComparisonTextDisplays
-from view.interfaces import IComparisonView
-from view.search_frame import SearchFrame
-from view.view import ViewBehavior
+from frontend_tkinter.annotation_menu_frame import AnnotationMenuFrame
+from frontend_tkinter.comparison_header_frame import ComparisonHeaderFrame
+from frontend_tkinter.comparison_text_displays import ComparisonTextDisplays
+from frontend_tkinter.interfaces import IComparisonView
+from frontend_tkinter.search_frame import SearchFrame
+from frontend_tkinter.view import ViewBehavior
 
 
 class ComparisonView(tk.Frame, IComparisonView):

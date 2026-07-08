@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
-from view.annotation_text_display_frame import AnnotationTextDisplayFrame
-from view.meta_tags_frame import MetaTagsFrame
-from view.annotation_menu_frame import AnnotationMenuFrame
-from view.search_frame import SearchFrame
-from view.view import ViewBehavior
-from view.interfaces import IView
+from frontend_tkinter.annotation_text_display_frame import AnnotationTextDisplayFrame
+from frontend_tkinter.meta_tags_frame import MetaTagsFrame
+from frontend_tkinter.annotation_menu_frame import AnnotationMenuFrame
+from frontend_tkinter.search_frame import SearchFrame
+from frontend_tkinter.view import ViewBehavior
+from frontend_tkinter.interfaces import IView
 
 
 class AnnotationView(tk.Frame, IView):

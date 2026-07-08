@@ -4,7 +4,7 @@ from typing import List
 
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
-from view.annotation_text_display_frame import AnnotationTextDisplayFrame
+from frontend_tkinter.annotation_text_display_frame import AnnotationTextDisplayFrame
 from viewmodel.comparison_text_displays_view_model import ComparisonTextDisplaysViewModel
 
 

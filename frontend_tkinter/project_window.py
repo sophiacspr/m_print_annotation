@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
 from enums.menu_pages import MenuPage, MenuSubpage
-from view.edit_project_wizard_frame import EditProjectWizardFrame
-from view.new_project_wizard_frame import NewProjectWizardFrame
+from frontend_tkinter.edit_project_wizard_frame import EditProjectWizardFrame
+from frontend_tkinter.new_project_wizard_frame import NewProjectWizardFrame
 
 
 class ProjectWindow(tk.Toplevel):

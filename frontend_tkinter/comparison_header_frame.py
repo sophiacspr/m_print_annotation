@@ -3,7 +3,7 @@ from tkinter import ttk
 from typing import List
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
-from view.interfaces import IComparisonHeaderFrame
+from frontend_tkinter.interfaces import IComparisonHeaderFrame
 from viewmodel.comparison_header_view_model import ComparisonHeaderViewModel
 
 

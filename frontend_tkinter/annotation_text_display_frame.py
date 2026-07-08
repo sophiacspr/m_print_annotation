@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
-from view.text_display_frame import TextDisplayFrame
+from frontend_tkinter.text_display_frame import TextDisplayFrame
 from viewmodel.annotation_text_display_view_model import AnnotationTextDisplayViewModel
 
 

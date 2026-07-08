@@ -3,7 +3,7 @@ from typing import Any
 
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
-from view.interfaces import ITextDisplayFrame
+from frontend_tkinter.interfaces import ITextDisplayFrame
 from viewmodel.text_display_view_model import TextDisplayViewModel
 
 

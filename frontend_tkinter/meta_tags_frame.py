@@ -3,7 +3,7 @@ from tkinter import ttk
 from typing import List, Dict
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
-from view.interfaces import IMetaTagsFrame
+from frontend_tkinter.interfaces import IMetaTagsFrame
 from viewmodel.meta_tags_view_model import MetaTagsViewModel
 
 

@@ -5,7 +5,7 @@ from tkinter import ttk
 from controller.interfaces import IController
 from enums.menu_pages import MenuSubpage
 from observer.interfaces import IPublisher
-from view.new_project_wizard_frame import NewProjectWizardFrame
+from frontend_tkinter.new_project_wizard_frame import NewProjectWizardFrame
 from viewmodel.edit_project_wizard_view_model import EditProjectWizardViewModel
 
 

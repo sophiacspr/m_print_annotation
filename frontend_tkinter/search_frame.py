@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
 from observer.interfaces import IObserver, IPublisher
-from view.tooltip import ToolTip
+from frontend_tkinter.tooltip import ToolTip
 from viewmodel.search_frame_view_model import SearchFrameViewModel
 
 

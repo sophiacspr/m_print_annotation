@@ -1,6 +1,6 @@
 import tkinter as tk
 from controller.interfaces import IController
-from view.interfaces import IView
+from frontend_tkinter.interfaces import IView
 
 
 class ViewBehavior:

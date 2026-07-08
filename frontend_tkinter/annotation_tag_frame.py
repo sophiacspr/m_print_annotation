@@ -4,7 +4,7 @@ from typing import Dict, List
 import uuid
 from controller.interfaces import IController
 from data_classes.search_result import SearchResult
-from view.tooltip import ToolTip
+from frontend_tkinter.tooltip import ToolTip
 
 
 class AnnotationTagFrame(tk.Frame):

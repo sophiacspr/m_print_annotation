@@ -2,7 +2,7 @@ import tkinter as tk
 
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
-from view.text_display_frame import TextDisplayFrame
+from frontend_tkinter.text_display_frame import TextDisplayFrame
 from viewmodel.preview_text_display_view_model import PreviewTextDisplayViewModel
 
 

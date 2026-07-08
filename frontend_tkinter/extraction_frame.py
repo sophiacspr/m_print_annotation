@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
-from view.interfaces import IExtractionFrame
+from frontend_tkinter.interfaces import IExtractionFrame
 from viewmodel.extraction_frame_view_model import ExtractionFrameViewModel
 
 
