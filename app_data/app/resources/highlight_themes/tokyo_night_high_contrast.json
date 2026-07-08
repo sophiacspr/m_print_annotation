@@ -1,0 +1,99 @@
+{
+    "search": {
+        "background_color": "#e0af68",
+        "font_color": "#1a1b26"
+    },
+    "current_search": {
+        "background_color": "#f7768e",
+        "font_color": "#1a1b26"
+    },
+    "colors": {
+        "blue": {
+            "background_color": "#7aa2f7",
+            "font_color": "#1a1b26"
+        },
+        "rose": {
+            "background_color": "#f7768e",
+            "font_color": "#1a1b26"
+        },
+        "cyan": {
+            "background_color": "#7dcfff",
+            "font_color": "#1a1b26"
+        },
+        "green": {
+            "background_color": "#9ece6a",
+            "font_color": "#1a1b26"
+        },
+        "iris": {
+            "background_color": "#bb9af7",
+            "font_color": "#1a1b26"
+        },
+        "gold": {
+            "background_color": "#e0af68",
+            "font_color": "#1a1b26"
+        },
+        "orange": {
+            "background_color": "#ff9e64",
+            "font_color": "#1a1b26"
+        },
+        "teal": {
+            "background_color": "#73daca",
+            "font_color": "#1a1b26"
+        }
+    },
+    "recommended_sets": {
+        "1": [
+            "blue"
+        ],
+        "2": [
+            "blue",
+            "rose"
+        ],
+        "3": [
+            "blue",
+            "rose",
+            "cyan"
+        ],
+        "4": [
+            "blue",
+            "rose",
+            "cyan",
+            "green"
+        ],
+        "5": [
+            "blue",
+            "rose",
+            "cyan",
+            "green",
+            "iris"
+        ],
+        "6": [
+            "blue",
+            "rose",
+            "cyan",
+            "green",
+            "iris",
+            "gold"
+        ],
+        "8": [
+            "blue",
+            "rose",
+            "cyan",
+            "green",
+            "iris",
+            "gold",
+            "orange",
+            "teal"
+        ]
+    },
+    "fallback_order": [
+        "blue",
+        "rose",
+        "cyan",
+        "green",
+        "iris",
+        "gold",
+        "orange",
+        "teal"
+    ]
+}

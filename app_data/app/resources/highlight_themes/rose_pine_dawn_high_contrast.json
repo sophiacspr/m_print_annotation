@@ -1,0 +1,99 @@
+{
+    "search": {
+        "background_color": "#ea9d34",
+        "font_color": "#232136"
+    },
+    "current_search": {
+        "background_color": "#b4637a",
+        "font_color": "#fffaf3"
+    },
+    "colors": {
+        "love": {
+            "background_color": "#b4637a",
+            "font_color": "#fffaf3"
+        },
+        "gold": {
+            "background_color": "#ea9d34",
+            "font_color": "#232136"
+        },
+        "pine": {
+            "background_color": "#286983",
+            "font_color": "#fffaf3"
+        },
+        "foam": {
+            "background_color": "#56949f",
+            "font_color": "#fffaf3"
+        },
+        "iris": {
+            "background_color": "#907aa9",
+            "font_color": "#fffaf3"
+        },
+        "rose": {
+            "background_color": "#d7827e",
+            "font_color": "#232136"
+        },
+        "text": {
+            "background_color": "#575279",
+            "font_color": "#fffaf3"
+        },
+        "muted": {
+            "background_color": "#797593",
+            "font_color": "#fffaf3"
+        }
+    },
+    "recommended_sets": {
+        "1": [
+            "love"
+        ],
+        "2": [
+            "love",
+            "gold"
+        ],
+        "3": [
+            "love",
+            "gold",
+            "pine"
+        ],
+        "4": [
+            "love",
+            "gold",
+            "pine",
+            "foam"
+        ],
+        "5": [
+            "love",
+            "gold",
+            "pine",
+            "foam",
+            "iris"
+        ],
+        "6": [
+            "love",
+            "gold",
+            "pine",
+            "foam",
+            "iris",
+            "rose"
+        ],
+        "8": [
+            "love",
+            "gold",
+            "pine",
+            "foam",
+            "iris",
+            "rose",
+            "text",
+            "muted"
+        ]
+    },
+    "fallback_order": [
+        "love",
+        "gold",
+        "pine",
+        "foam",
+        "iris",
+        "rose",
+        "text",
+        "muted"
+    ]
+}

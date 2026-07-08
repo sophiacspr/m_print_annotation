@@ -1,0 +1,99 @@
+{
+    "search": {
+        "background_color": "#fabd2f",
+        "font_color": "#282828"
+    },
+    "current_search": {
+        "background_color": "#fb4934",
+        "font_color": "#282828"
+    },
+    "colors": {
+        "red": {
+            "background_color": "#fb4934",
+            "font_color": "#282828"
+        },
+        "yellow": {
+            "background_color": "#fabd2f",
+            "font_color": "#282828"
+        },
+        "blue": {
+            "background_color": "#83a598",
+            "font_color": "#282828"
+        },
+        "green": {
+            "background_color": "#b8bb26",
+            "font_color": "#282828"
+        },
+        "purple": {
+            "background_color": "#d3869b",
+            "font_color": "#282828"
+        },
+        "aqua": {
+            "background_color": "#8ec07c",
+            "font_color": "#282828"
+        },
+        "orange": {
+            "background_color": "#fe8019",
+            "font_color": "#282828"
+        },
+        "foreground": {
+            "background_color": "#ebdbb2",
+            "font_color": "#282828"
+        }
+    },
+    "recommended_sets": {
+        "1": [
+            "red"
+        ],
+        "2": [
+            "red",
+            "yellow"
+        ],
+        "3": [
+            "red",
+            "yellow",
+            "blue"
+        ],
+        "4": [
+            "red",
+            "yellow",
+            "blue",
+            "green"
+        ],
+        "5": [
+            "red",
+            "yellow",
+            "blue",
+            "green",
+            "purple"
+        ],
+        "6": [
+            "red",
+            "yellow",
+            "blue",
+            "green",
+            "purple",
+            "aqua"
+        ],
+        "8": [
+            "red",
+            "yellow",
+            "blue",
+            "green",
+            "purple",
+            "aqua",
+            "orange",
+            "foreground"
+        ]
+    },
+    "fallback_order": [
+        "red",
+        "yellow",
+        "blue",
+        "green",
+        "purple",
+        "aqua",
+        "orange",
+        "foreground"
+    ]
+}

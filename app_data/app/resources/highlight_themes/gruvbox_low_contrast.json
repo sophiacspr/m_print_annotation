@@ -1,0 +1,99 @@
+{
+    "search": {
+        "background_color": "#504945",
+        "font_color": "#ebdbb2"
+    },
+    "current_search": {
+        "background_color": "#665c54",
+        "font_color": "#fbf1c7"
+    },
+    "colors": {
+        "bg1": {
+            "background_color": "#3c3836",
+            "font_color": "#ebdbb2"
+        },
+        "bg2": {
+            "background_color": "#504945",
+            "font_color": "#ebdbb2"
+        },
+        "bg3": {
+            "background_color": "#665c54",
+            "font_color": "#fbf1c7"
+        },
+        "muted_red": {
+            "background_color": "#5c2e2c",
+            "font_color": "#ebdbb2"
+        },
+        "muted_green": {
+            "background_color": "#4a4b2f",
+            "font_color": "#ebdbb2"
+        },
+        "muted_yellow": {
+            "background_color": "#66512f",
+            "font_color": "#fbf1c7"
+        },
+        "muted_blue": {
+            "background_color": "#334b4f",
+            "font_color": "#ebdbb2"
+        },
+        "muted_purple": {
+            "background_color": "#51384a",
+            "font_color": "#ebdbb2"
+        }
+    },
+    "recommended_sets": {
+        "1": [
+            "bg1"
+        ],
+        "2": [
+            "bg1",
+            "muted_blue"
+        ],
+        "3": [
+            "bg1",
+            "muted_blue",
+            "muted_green"
+        ],
+        "4": [
+            "bg1",
+            "muted_blue",
+            "muted_green",
+            "muted_purple"
+        ],
+        "5": [
+            "bg1",
+            "muted_blue",
+            "muted_green",
+            "muted_purple",
+            "muted_red"
+        ],
+        "6": [
+            "bg1",
+            "muted_blue",
+            "muted_green",
+            "muted_purple",
+            "muted_red",
+            "muted_yellow"
+        ],
+        "8": [
+            "bg1",
+            "muted_blue",
+            "muted_green",
+            "muted_purple",
+            "muted_red",
+            "muted_yellow",
+            "bg2",
+            "bg3"
+        ]
+    },
+    "fallback_order": [
+        "bg1",
+        "muted_blue",
+        "muted_green",
+        "muted_purple",
+        "muted_red",
+        "muted_yellow",
+        "bg2",
+        "bg3"
+    ]
+}

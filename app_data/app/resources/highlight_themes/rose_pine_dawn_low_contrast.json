@@ -1,0 +1,99 @@
+{
+    "search": {
+        "background_color": "#f6e3c5",
+        "font_color": "#575279"
+    },
+    "current_search": {
+        "background_color": "#f1c4c9",
+        "font_color": "#575279"
+    },
+    "colors": {
+        "rose": {
+            "background_color": "#f4d7d4",
+            "font_color": "#575279"
+        },
+        "foam": {
+            "background_color": "#dbeaf0",
+            "font_color": "#286983"
+        },
+        "iris": {
+            "background_color": "#e6def7",
+            "font_color": "#575279"
+        },
+        "gold": {
+            "background_color": "#f6e3c5",
+            "font_color": "#575279"
+        },
+        "pine": {
+            "background_color": "#d5ebe1",
+            "font_color": "#286983"
+        },
+        "love": {
+            "background_color": "#f1c4c9",
+            "font_color": "#575279"
+        },
+        "subtle": {
+            "background_color": "#e8e0dc",
+            "font_color": "#575279"
+        },
+        "muted": {
+            "background_color": "#dfdad9",
+            "font_color": "#575279"
+        }
+    },
+    "recommended_sets": {
+        "1": [
+            "rose"
+        ],
+        "2": [
+            "rose",
+            "foam"
+        ],
+        "3": [
+            "rose",
+            "foam",
+            "iris"
+        ],
+        "4": [
+            "rose",
+            "foam",
+            "iris",
+            "gold"
+        ],
+        "5": [
+            "rose",
+            "foam",
+            "iris",
+            "gold",
+            "pine"
+        ],
+        "6": [
+            "rose",
+            "foam",
+            "iris",
+            "gold",
+            "pine",
+            "love"
+        ],
+        "8": [
+            "rose",
+            "foam",
+            "iris",
+            "gold",
+            "pine",
+            "love",
+            "subtle",
+            "muted"
+        ]
+    },
+    "fallback_order": [
+        "rose",
+        "foam",
+        "iris",
+        "gold",
+        "pine",
+        "love",
+        "subtle",
+        "muted"
+    ]
+}

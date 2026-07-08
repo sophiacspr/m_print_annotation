@@ -1,0 +1,99 @@
+{
+    "search": {
+        "background_color": "#414868",
+        "font_color": "#c0caf5"
+    },
+    "current_search": {
+        "background_color": "#565f89",
+        "font_color": "#f1f5ff"
+    },
+    "colors": {
+        "storm": {
+            "background_color": "#414868",
+            "font_color": "#c0caf5"
+        },
+        "deep_blue": {
+            "background_color": "#2f3549",
+            "font_color": "#c0caf5"
+        },
+        "muted_iris": {
+            "background_color": "#4a406a",
+            "font_color": "#f1f5ff"
+        },
+        "dark_teal": {
+            "background_color": "#244f5a",
+            "font_color": "#b4f9f8"
+        },
+        "dark_green": {
+            "background_color": "#334b4f",
+            "font_color": "#c0caf5"
+        },
+        "soft_slate": {
+            "background_color": "#343a52",
+            "font_color": "#c0caf5"
+        },
+        "soft_indigo": {
+            "background_color": "#565f89",
+            "font_color": "#f1f5ff"
+        },
+        "night": {
+            "background_color": "#24283b",
+            "font_color": "#c0caf5"
+        }
+    },
+    "recommended_sets": {
+        "1": [
+            "storm"
+        ],
+        "2": [
+            "storm",
+            "dark_teal"
+        ],
+        "3": [
+            "storm",
+            "dark_teal",
+            "muted_iris"
+        ],
+        "4": [
+            "storm",
+            "dark_teal",
+            "muted_iris",
+            "dark_green"
+        ],
+        "5": [
+            "storm",
+            "dark_teal",
+            "muted_iris",
+            "dark_green",
+            "deep_blue"
+        ],
+        "6": [
+            "storm",
+            "dark_teal",
+            "muted_iris",
+            "dark_green",
+            "deep_blue",
+            "soft_indigo"
+        ],
+        "8": [
+            "storm",
+            "dark_teal",
+            "muted_iris",
+            "dark_green",
+            "deep_blue",
+            "soft_indigo",
+            "soft_slate",
+            "night"
+        ]
+    },
+    "fallback_order": [
+        "storm",
+        "dark_teal",
+        "muted_iris",
+        "dark_green",
+        "deep_blue",
+        "soft_indigo",
+        "soft_slate",
+        "night"
+    ]
+}
