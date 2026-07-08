@@ -7,7 +7,6 @@ from frontend_tkinter.annotation_menu_frame import AnnotationMenuFrame
 from frontend_tkinter.comparison_header_frame import ComparisonHeaderFrame
 from frontend_tkinter.comparison_text_displays import ComparisonTextDisplays
 from frontend_tkinter.interfaces import IComparisonView
-from frontend_tkinter.search_frame import SearchFrame
 from frontend_tkinter.view import ViewBehavior
 
 

@@ -1,5 +1,4 @@
 from model.document_model import DocumentModel
-from observer.interfaces import IObserver
 
 
 class ExtractionDocumentModel(DocumentModel):

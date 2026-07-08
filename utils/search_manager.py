@@ -55,7 +55,6 @@ class SearchManager:
 
             match_token = stripped_token.rstrip(self._chars_to_strip)
             current_dict = None
-            base_word = match_token
 
             if match_token in db_dict:
                 current_dict = db_dict[match_token]
@@ -65,7 +64,6 @@ class SearchManager:
                         stripped = match_token[:-len(suffix)]
                         if stripped in db_dict:
                             current_dict = db_dict[stripped]
-                            base_word = match_token
                             break
             if not current_dict:
                 next_token_pos = text.find(raw_token, char_pos)

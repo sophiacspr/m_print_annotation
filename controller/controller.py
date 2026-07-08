@@ -23,7 +23,7 @@ from model.project_wizard_model import ProjectWizardModel
 from model.save_state_model import SaveStateModel
 from model.tag_model import TagModel
 from model.undo_redo_model import UndoRedoModel
-from observer.interfaces import IPublisher, IObserver, IPublisher, IObserver
+from observer.interfaces import IPublisher, IObserver
 from typing import Any, Callable, Dict, List,  Tuple
 from utils.color_manager import ColorManager
 from utils.comparison_manager import ComparisonManager
@@ -1661,7 +1661,7 @@ class Controller(IController):
         file_path = merged_document.get_file_path()
         if not file_path:
             initial_dir = self._file_handler.resolve_path(
-                f"default_comparison_export_v2_directory")
+                "default_comparison_export_v2_directory")
             file_path = self._main_window.ask_user_for_save_path(
                 initial_dir=initial_dir)
             file_name = self._file_handler.derive_file_name(

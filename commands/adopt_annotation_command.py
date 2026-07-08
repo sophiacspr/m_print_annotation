@@ -1,7 +1,7 @@
 from commands.interfaces import ICommand
 from model.interfaces import IComparisonModel, IDocumentModel, ITagModel
 from utils.tag_manager import TagManager
-from typing import List, Dict
+from typing import List
 
 
 class AdoptAnnotationCommand(ICommand):

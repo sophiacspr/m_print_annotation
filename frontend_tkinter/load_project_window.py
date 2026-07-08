@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from controller.interfaces import IController
-from enums.menu_pages import MenuSubpage
 from observer.interfaces import IObserver, IPublisher
 from viewmodel.load_project_window_view_model import LoadProjectWindowViewModel
 

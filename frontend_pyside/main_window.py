@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QTabWidget,
-    QWidget,
 )
 
 from controller.interfaces import IController

@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from typing import List, Dict
+from typing import List
 from controller.interfaces import IController
 from observer.interfaces import IPublisher
 from frontend_tkinter.interfaces import IMetaTagsFrame

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from commands.interfaces import ICommand
-from observer.interfaces import IObserver, IObserver, IObserver, IPublisher
-from typing import List, Dict, Any
+from observer.interfaces import IObserver, IPublisher
+from typing import Dict, Any
 
 
 class IController(ABC):

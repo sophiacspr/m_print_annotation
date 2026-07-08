@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 from enums.search_types import SearchType
 from model.interfaces import IDocumentModel
 from model.search_model import SearchModel

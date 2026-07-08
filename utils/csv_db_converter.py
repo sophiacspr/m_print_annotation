@@ -285,7 +285,7 @@ class CSVDBConverter:
         """
         postfixes = self._postfixes
         # check if the column has a postfix that should be removed
-        if not (str(column_number) in postfixes):
+        if (str(column_number) not in postfixes):
             return entry
 
         postfixes = self._postfixes[str(column_number)]
@@ -315,7 +315,7 @@ class CSVDBConverter:
         """
         infixes = self._infixes
         # check if the column has a infix that should be removed
-        if not (str(column_number) in infixes):
+        if (str(column_number) not in infixes):
             return entry
         # Build a regex pattern that matches any infix literally
         pattern = "|".join(
@@ -339,7 +339,7 @@ class CSVDBConverter:
             str: The entry with the prefix stripped, or the original entry if no prefix matched.
         """
         # check if the column has a prefix that should be removed
-        if not (str(column_number) in self._prefixes):
+        if (str(column_number) not in self._prefixes):
             return entry
 
         prefixes = self._prefixes[str(column_number)]

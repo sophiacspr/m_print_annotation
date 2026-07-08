@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
-from tkinter import simpledialog
 from typing import Any, List, Optional
 from enums.export_formats import ExportFormat
 from enums.menu_pages import MenuPage, MenuSubpage

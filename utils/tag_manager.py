@@ -1,6 +1,5 @@
-from hashlib import md5
 import re
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 import uuid
 from controller.interfaces import IController
 from model.interfaces import IDocumentModel, ITagModel

@@ -1,5 +1,4 @@
-from typing import List, Optional, Tuple
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional
 from model.highlight_model import HighlightModel
 from model.interfaces import IComparisonModel, IDocumentModel, ITagModel
 from observer.interfaces import IObserver
