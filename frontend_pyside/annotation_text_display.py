@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
-
-from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
-from PySide6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from controller.interfaces import IController
+from frontend_pyside.highlight_renderer import PySideHighlightRenderer
 from frontend_pyside.text_display_widget import TextDisplayWidget
+from observer.interfaces import IPublisher
 from viewmodel.annotation_text_display_view_model import AnnotationTextDisplayViewModel
 
 
@@ -30,6 +29,9 @@ class AnnotationTextDisplayFrame(QWidget):
             on_change=self._render_from_view_model,
             auto_register=False,
         )
+
+        self._highlight_renderer = PySideHighlightRenderer()
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self._text_display = TextDisplayWidget(
@@ -55,7 +57,7 @@ class AnnotationTextDisplayFrame(QWidget):
     def is_static_observer(self) -> bool:
         return self._view_model.is_static_observer()
 
-    def update(self, publisher: Any) -> None:
+    def update(self, publisher: IPublisher) -> None:
         self._view_model.update(publisher)
 
     def disable_selection(self) -> None:
@@ -78,30 +80,8 @@ class AnnotationTextDisplayFrame(QWidget):
         search_highlight_data: list[tuple[str, str, int, int]],
     ) -> None:
         """Applies highlights without writing formatting into the document text."""
-        selections: list[QTextEdit.ExtraSelection] = []
-        document = self.text_widget.document()
-        max_position = max(0, document.characterCount() - 1)
-
-        for background, foreground, start, end in [
-            *tag_highlight_data,
-            *search_highlight_data,
-        ]:
-            start_position = max(0, min(start, max_position))
-            end_position = max(start_position, min(end, max_position))
-            if start_position == end_position:
-                continue
-
-            cursor = QTextCursor(document)
-            cursor.setPosition(start_position)
-            cursor.setPosition(end_position, QTextCursor.MoveMode.KeepAnchor)
-
-            text_format = QTextCharFormat()
-            text_format.setBackground(QColor(background))
-            text_format.setForeground(QColor(foreground))
-
-            selection = QTextEdit.ExtraSelection()
-            selection.cursor = cursor
-            selection.format = text_format
-            selections.append(selection)
-
-        self.text_widget.setExtraSelections(selections)
+        self._highlight_renderer.render(
+            text_widget=self.text_widget,
+            tag_highlight_data=tag_highlight_data,
+            search_highlight_data=search_highlight_data,
+        )
