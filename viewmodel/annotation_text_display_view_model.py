@@ -25,6 +25,7 @@ class AnnotationTextDisplayViewModel(TextDisplayViewModel):
             on_change=on_change,
             auto_register=auto_register if is_static_observer else False,
         )
+        
         self.tag_highlight_data: list[tuple[str, str, int, int]] = []
         self.search_highlight_data: list[tuple[str, str, int, int]] = []
 

@@ -32,12 +32,15 @@ class TextDisplayViewModel(BaseObserverViewModel):
           to the top and later text updates preserve the viewport.
         """
         self.did_replace_text = False
+
         if "text" not in state:
             return
 
+        new_text = state.get("text", "") or ""
+        reset_requested = bool(state.get("reset_scroll_position", False))
+        self.did_replace_text = reset_requested or new_text != self.text
         self.should_preserve_scroll = self._resolve_scroll_preservation(state)
-        self.did_replace_text = not self.should_preserve_scroll
-        self.text = state.get("text", "") or ""
+        self.text = new_text
         self._has_received_text = True
 
     def update_for_observer(self, observer: Any, publisher: Any) -> None:
@@ -52,7 +55,6 @@ class TextDisplayViewModel(BaseObserverViewModel):
     def update_preview_text(self, text: str) -> None:
         self.text = text
         self.should_preserve_scroll = True
-        self.did_replace_text = False
         self._has_received_text = True
         self._controller.perform_update_preview_text(text)
 
