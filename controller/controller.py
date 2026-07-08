@@ -25,6 +25,7 @@ from model.tag_model import TagModel
 from model.undo_redo_model import UndoRedoModel
 from observer.interfaces import IPublisher, IObserver
 from typing import Any, Callable, Dict, List,  Tuple
+from services.highlighting import HighlightService,HighlightStyleService, SearchHighlightService, TagHighlightService
 from utils.color_manager import ColorManager
 from utils.comparison_manager import ComparisonManager
 from utils.document_manager import DocumentManager
@@ -94,6 +95,25 @@ class Controller(IController):
         self._search_manager = SearchManager(file_handler=self._file_handler)
         self._search_model_manager = SearchModelManager(self._search_manager)
         self._color_manager = ColorManager(self._file_handler)
+
+        #services
+        self._highlight_style_service = HighlightStyleService(self._settings_manager)
+        self._tag_highlight_service = TagHighlightService(
+            tag_manager=self._tag_manager,
+            style_service=self._highlight_style_service,
+        )
+        self._search_highlight_service = SearchHighlightService(
+            settings_manager=self._settings_manager,
+            style_service=self._highlight_style_service,
+        )
+        self._highlight_service = HighlightService(
+            annotation_document_model=self._annotation_document_model,
+            annotation_highlight_model=self._highlight_model,
+            comparison_model=self._comparison_model,
+            tag_highlight_service=self._tag_highlight_service,
+            search_highlight_service=self._search_highlight_service,
+        )
+
 
         # config
         self.update_project_name()
@@ -2069,88 +2089,16 @@ class Controller(IController):
 
         return []
 
-
-    def _clear_highlight_model(self, highlight_model: IPublisher) -> None:
-        """
-        Clears stale highlight state before recomputing highlights.
-
-        Highlight data belongs to the currently loaded document. When another
-        document is loaded, old tag ranges must not remain in the highlight
-        model, otherwise a later render can apply stale ranges to the new text.
-        """
-        reset_method = getattr(highlight_model, "reset", None)
-        if callable(reset_method):
-            reset_method()
-            return
-
-        clear_method_names = (
-            "clear_highlights",
-            "clear_tag_highlights",
-            "clear_search_highlights",
-        )
-        for method_name in clear_method_names:
-            clear_method = getattr(highlight_model, method_name, None)
-            if callable(clear_method):
-                clear_method()
-
     def _update_highlight_model(self) -> None:
         """
-        Updates the highlight model with tag and search highlights based on the current active view.
+        Updates highlight models for the current active view.
         """
-        color_scheme = self._settings_manager.get_color_scheme()
-        if self._active_view_id == "annotation":
-            document_models = [
-                self._document_source_mapping[self._active_view_id]]
-            highlight_models = [self._highlight_model]
+        self._highlight_service.refresh(
+            active_view_id=self._active_view_id,
+            current_search_model=self._current_search_model,
+        )
 
-        if self._active_view_id == "comparison":
-            comparison_model = self._document_source_mapping[self._active_view_id]
-            document_models = comparison_model.get_document_models()
-            highlight_models = comparison_model.get_highlight_models()
-
-        for document_model, highlight_model in zip(document_models, highlight_models):
-            self._clear_highlight_model(highlight_model)
-            highlight_data = self._tag_manager.get_highlight_data(document_model)
-            tag_highlights = [
-                (
-                    color_scheme["tags"][tag]["background_color"],
-                    color_scheme["tags"][tag]["font_color"],
-                    start,
-                    end,
-                )
-                for tag, start, end in highlight_data
-            ]
-            highlight_model.add_tag_highlights(tag_highlights)
-
-        if not self._current_search_model:
-            return
-
-        search_highlights = []
-
-        current_search_bg_color = color_scheme["current_search"]["background_color"]
-        current_search_font_color = color_scheme["current_search"]["font_color"]
-        search_state = self._current_search_model.get_state()
-        current_search_result = search_state.get(
-            "current_search_result", None)
-
-        if self._settings_manager.are_all_search_results_highlighted():
-            search_bg_color = color_scheme["search"]["background_color"]
-            search_font_color = color_scheme["search"]["font_color"]
-            results = search_state.get("results", [])
-            search_highlights += [
-                (search_bg_color, search_font_color, r.start, r.end)
-                for r in results
-                if r != current_search_result
-            ]
-
-        # Ensure current search result is always highlighted on top, with its specific color
-        if current_search_result:
-            search_highlights.append(
-                (current_search_bg_color, current_search_font_color, current_search_result.start,
-                 current_search_result.end)
-            )
-        highlight_models[0].add_search_highlights(search_highlights)
-
+ 
     def get_tag_types(self) -> List[str]:
         """
         Retrieves all available tag types from the loaded template groups.
