@@ -1,4 +1,8 @@
--beim tag einfügen sprint text display wieder nach oben
+project wizard gui 
+-reparieren
+-button für aktualisierung von farbschema
+-farbschemata testen
+
 
 -nach dem speichern 
 Traceback (most recent call last):
@@ -89,6 +93,8 @@ FORMAT out:
 
 
 done:
+-beim tag einfügen sprint text display wieder nach oben
+
 -transform raw text to json file
 
 -comparison load funktioniert noch nicht in richtiger reihenfolge
